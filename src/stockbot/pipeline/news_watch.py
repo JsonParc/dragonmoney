@@ -60,11 +60,10 @@ class NewsWatcher:
         d = self.d
         cfg = d.runtime()
         held = list(d.broker.positions())
-        before = {c.id: c.verification for c in d.verifier.recent(now, 48)}
         ingest_news(d, now, held)
         if not held:
             return []
-        clusters = [c for c in d.verifier.recent(now, 48) if before.get(c.id) != c.verification]
+        clusters = d.verifier.recent(now, 48)
         as_of = now.astimezone(KST).date()
         mkt = PriceMarket(d.prices, as_of)
         debates: list[int] = []
@@ -81,12 +80,21 @@ class NewsWatcher:
                                     f"관련 보유: {', '.join(targets)} — 다른 매체에서 확인되면 긴급 토론을 엽니다.")
                 continue
             for t in targets:
+                if self._kv(f"emergency_done:{c.id}:{t}"):
+                    continue
                 last = self._kv(f"last_emergency:{t}")
                 if last and now - datetime.fromisoformat(last) < EMERGENCY_COOLDOWN:
                     continue
-                self._set(f"last_emergency:{t}", now.isoformat())
                 pf = portfolio_view(d, mkt)
-                did, result, intents = run_debate(d, t, as_of, "emergency", pf, mkt, cfg, news_as_of=now)
+                try:
+                    did, result, intents = run_debate(d, t, as_of, "emergency", pf, mkt, cfg, news_as_of=now)
+                except Exception as e:
+                    d.health.record("debate", False, f"emergency {t}: {e}", now)
+                    continue
+                if not any(o.valid for o in result.rounds[-1]):
+                    continue  # nobody answered: retry on the next poll
+                self._set(f"emergency_done:{c.id}:{t}", True)
+                self._set(f"last_emergency:{t}", now.isoformat())
                 debates.append(did)
                 out = apply_risk(intents, pf, mkt, cfg.budget_usd, cfg.risk, cfg.mode,
                                  circuit_breaker_tripped(pf, cfg.risk), cfg.active_rules())

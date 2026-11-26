@@ -105,7 +105,7 @@ export default function Settings({ onChange }: { onChange: () => void }) {
             <input id={k} type="number" step={step} value={risk[k] ?? ""} onChange={(e) => setRisk({ ...risk, [k]: Number(e.target.value) })} />
           </div>
         ))}
-        <button className="btn primary" onClick={() => save({ risk }, "리스크 규칙을 저장했어요")}>리스크 규칙 저장</button>
+        <button className="btn primary" onClick={() => withPin("리스크 규칙 저장", { risk })}>리스크 규칙 저장</button>
       </div>
 
       <h2>연결 상태</h2>

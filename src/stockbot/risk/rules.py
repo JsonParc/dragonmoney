@@ -70,7 +70,7 @@ def decision_to_intents(result: DebateResult, decision_id: int, pf: PortfolioVie
     if r.action == Action.SELL:
         return [intent("sell", "sell", held)]
     if r.action == Action.SELL_REBUY:
-        limit = r.rebuy_price or round(price * 0.95, 2)
+        limit = round(min(r.rebuy_price or price * 0.95, price * 0.99), 2)  # never above market
         expires = trading_session(add_trading_days(as_of, REBUY_EXPIRY_DAYS)).close_kst
         return [intent("sell", "sell", held), intent("rebuy", "buy", held, limit_price=limit, expires_at=expires)]
     if r.action == Action.SWITCH:
@@ -100,7 +100,9 @@ def eligible(ticker: str, rules: TradingRules) -> tuple[bool, str]:
 
 
 def apply_risk(intents: list[OrderIntent], pf: PortfolioView, mkt: MarketView, budget_usd: float, cfg: RiskConfig,
-               mode: ModeState, circuit_tripped: bool, rules: TradingRules | None = None) -> RiskOutcome:
+               mode: ModeState, circuit_tripped: bool, rules: TradingRules | None = None,
+               pending: list[OrderIntent] | None = None) -> RiskOutcome:
+    """`pending`: buy orders already staged/open but not filled; they count as committed exposure."""
     rules = rules or TradingRules()
     out = RiskOutcome()
     cash = pf.cash
@@ -120,6 +122,12 @@ def apply_risk(intents: list[OrderIntent], pf: PortfolioView, mkt: MarketView, b
         cash += qty * price
         invested -= qty * price
         out.accepted.append(i.model_copy(update={"qty": qty}))
+
+    for p in pending or []:
+        price = p.limit_price or mkt.last_price(p.ticker)
+        cash -= p.qty * price
+        invested += p.qty * price
+        held[p.ticker] = held.get(p.ticker, 0) + p.qty
 
     for i in buys:
         if mode.paused:

@@ -18,14 +18,14 @@ def test_winter_day_jobs():
     assert jobs["report"].run_at == datetime(2026, 12, 2, 17, 30, tzinfo=KST)
     assert jobs["report"].session_date == date(2026, 12, 1)
     assert jobs["pre_open"].run_at == datetime(2026, 12, 2, 23, 0, tzinfo=KST)
-    assert jobs["open"].run_at == datetime(2026, 12, 2, 23, 30, tzinfo=KST)
+    assert jobs["open"].run_at == datetime(2026, 12, 2, 23, 35, tzinfo=KST)  # 5 min after the bell
     assert jobs["open"].session_date == date(2026, 12, 2)
 
 
 def test_dst_shift():
     jobs = {j.name: j for j in plan_jobs(date(2026, 7, 2), RuntimeConfig())}
     assert jobs["post_close"].run_at == datetime(2026, 7, 2, 5, 30, tzinfo=KST)
-    assert jobs["open"].run_at == datetime(2026, 7, 2, 22, 30, tzinfo=KST)
+    assert jobs["open"].run_at == datetime(2026, 7, 2, 22, 35, tzinfo=KST)
 
 
 def test_no_jobs_on_holiday():

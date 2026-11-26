@@ -170,6 +170,8 @@ class OrderRow(Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     needs_approval: Mapped[bool] = mapped_column(Boolean, default=False)
+    stage_expires_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
+    guard_code: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[_dt] = mapped_column(DateTime)
     filled_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
     broker: Mapped[str] = mapped_column(String, default="")

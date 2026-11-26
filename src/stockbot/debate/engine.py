@@ -94,24 +94,32 @@ class DebateEngine:
         with ThreadPoolExecutor(max_workers=len(self.seats)) as pool:
             return list(pool.map(lambda s: self._ask(s, ctx, rnd, prior), self.seats))
 
+    def _quorum(self, ops: list[Opinion]) -> bool:
+        valid = [o for o in ops if o.valid]
+        return len(valid) >= self.cfg.min_valid_seats and {o.team for o in valid} == {s.team for s in self.seats}
+
     def run(self, ctx: DebateContext, weights: dict[str, float], max_rounds: int | None = None) -> DebateResult:
         limit = self.cfg.max_rebuttal_rounds if max_rounds is None else max_rounds
         rounds = [self._round(ctx, 0, [])]
+        quorum = self._quorum(rounds[0])
         direction, shares = direction_vote(rounds[0], weights)
         pos = [team_position(rounds[0], weights, t) for t in {s.team for s in self.seats}]
-        agreed = direction is not None and len(set(pos)) == 1 and pos[0] is not None
+        agreed = quorum and direction is not None and len(set(pos)) == 1 and pos[0] is not None
         if not agreed:
             direction = None
             for rnd in range(1, limit + 1):
-                if not any(o.valid for o in rounds[-1]):
+                if not quorum:
                     break
                 rounds.append(self._round(ctx, rnd, rounds[-1]))
+                quorum = self._quorum(rounds[-1])
+                if not quorum:
+                    break
                 direction, shares = direction_vote(rounds[-1], weights)
                 if direction is not None:
                     break
         final = rounds[-1]
         any_valid = any(o.valid for o in final)
-        deadlock = direction is None and any_valid
+        deadlock = direction is None and quorum
         resolved = resolve_details(final, weights, direction) if direction is not None else None
         invalid = sorted({o.seat_id for r in rounds for o in r if not o.valid})
         summary = ""

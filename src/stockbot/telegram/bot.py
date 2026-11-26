@@ -42,13 +42,33 @@ class TelegramNotifier:
             self.send_to(cid, text, buttons)
 
 
+class KVOffsetStore:
+    def __init__(self, session_factory):
+        self._sf = session_factory
+
+    def load(self) -> int:
+        from stockbot.settings_store import get_kv
+
+        with self._sf() as s:
+            return int(get_kv(s, "telegram_offset", 0) or 0)
+
+    def save(self, offset: int) -> None:
+        from stockbot.settings_store import set_kv
+
+        with self._sf() as s:
+            set_kv(s, "telegram_offset", offset)
+            s.commit()
+
+
 class TelegramPoller:
     """Long-polls getUpdates and routes messages / button presses to a CommandService."""
 
-    def __init__(self, token: str, service, client: httpx.Client | None = None, poll_timeout: int = 25):
+    def __init__(self, token: str, service, client: httpx.Client | None = None, poll_timeout: int = 25,
+                 offset_store=None):
         self.notifier = TelegramNotifier(token, [], client)
         self.service = service
-        self.offset = 0
+        self.offset_store = offset_store  # object with load() -> int and save(int); survives restarts
+        self.offset = offset_store.load() if offset_store else 0
         self.poll_timeout = poll_timeout
         self._stop = threading.Event()
 
@@ -59,6 +79,8 @@ class TelegramPoller:
         now = datetime.now(timezone.utc)
         for u in updates:
             self.offset = max(self.offset, u["update_id"] + 1)
+            if self.offset_store:
+                self.offset_store.save(self.offset)
             try:
                 if "message" in u:
                     m = u["message"]

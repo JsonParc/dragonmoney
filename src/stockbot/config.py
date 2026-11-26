@@ -58,6 +58,7 @@ class RiskConfig(BaseModel):
 class DebateConfig(BaseModel):
     seats_per_team: int = 3
     max_rebuttal_rounds: int = 2
+    min_valid_seats: int = 4  # quorum: fewer valid answers (or a team missing) => no decision
     candidates_per_day: int = 5
     grading_horizon_days: int = 5
     neutral_threshold: float = 0.005

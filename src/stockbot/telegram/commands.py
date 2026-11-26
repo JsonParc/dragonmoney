@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hmac
+import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 
@@ -30,7 +31,38 @@ class Reply:
 
 # ------------------------------------------------------------- shared actions (web + telegram)
 def check_pin(settings, pin: str | None) -> bool:
-    return pin is not None and hmac.compare_digest(str(pin).strip(), str(settings.pin))
+    return pin is not None and hmac.compare_digest(str(pin).strip().encode("utf-8"), str(settings.pin).encode("utf-8"))
+
+
+PIN_MAX_FAILS = 5
+PIN_LOCK = timedelta(minutes=5)
+
+
+class PinGuard:
+    """Shared PIN attempt limiter for web + Telegram."""
+
+    def __init__(self):
+        self.fails = 0
+        self.locked_until: datetime | None = None
+
+    def check(self, settings, pin: str | None, now: datetime) -> str:
+        if self.locked_until and now < self.locked_until:
+            return "locked"
+        if check_pin(settings, pin):
+            self.fails = 0
+            return "ok"
+        self.fails += 1
+        if self.fails >= PIN_MAX_FAILS:
+            self.fails, self.locked_until = 0, now + PIN_LOCK
+        return "wrong"
+
+
+def pin_guard(deps) -> PinGuard:
+    g = getattr(deps, "_pin_guard", None)
+    if g is None:
+        g = PinGuard()
+        deps._pin_guard = g
+    return g
 
 
 def set_automation(deps, value: str) -> None:
@@ -147,9 +179,14 @@ class CommandService:
         text = (text or "").strip()
         wait = self._pin_wait.pop(chat_id, None)
         if wait and now - wait[2] <= PIN_TTL and not text.startswith("/"):
-            if not check_pin(self.settings, text):
+            res = pin_guard(self.d).check(self.settings, text, now)
+            if res == "locked":
+                return Reply("PIN을 여러 번 틀려 5분간 잠겼습니다.")
+            if res != "ok":
                 return Reply("PIN이 틀렸습니다. 요청을 취소했습니다.")
             return self._run_protected(chat_id, wait[0], wait[1], now)
+        if not text.startswith("/") and (re.fullmatch(r"\d{4,8}", text) or check_pin(self.settings, text)):
+            return Reply("지금 PIN을 기다리는 요청이 없습니다. 명령을 먼저 보내주세요.")
         if not text.startswith("/"):
             return self._ask(text, now)
         cmd, _, arg = text.partition(" ")

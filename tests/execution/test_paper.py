@@ -48,7 +48,7 @@ def test_resting_limit_rebuy(session_factory):
     r = p.place(rebuy("T", 10, limit=90, expires=NOW + timedelta(days=30)), NOW)
     assert r.status == "open"
     filled = p.process_open_orders(NOW + timedelta(hours=1))
-    assert filled[0].fill_price == 90 and p.positions()["T"].qty == 10
+    assert filled[0].fill_price == 89 and p.positions()["T"].qty == 10  # fills at the better market price
 
 
 def test_resting_limit_expires(session_factory):

@@ -15,8 +15,10 @@ from stockbot.models import NewsClusterRow, NewsRow
 Verification = Literal["confirmed", "unconfirmed", "contradicted"]
 LABEL_KO = {"confirmed": "확인됨", "unconfirmed": "미확인", "contradicted": "반박됨"}
 
-DENIAL = [r"\bden(y|ies|ied)\b", r"\bfalse report\b", r"\bfake\b", r"\brumou?rs?\b", r"\bhoax\b", r"\bnot true\b",
-          r"\bunfounded\b", "부인", "사실무근", "루머", "가짜"]
+DENIAL = [r"\bden(y|ies|ied)\b.{0,40}\b(reports?|rumou?rs?|claims?|allegations?)\b",
+          r"\b(reports?|rumou?rs?|claims?)\b.{0,30}\b(false|untrue|baseless|inaccurate)\b",
+          r"\bfalse reports?\b", r"\bfake news\b", r"\bhoax\b", r"\bnot true\b", r"\bunfounded\b",
+          "보도를 부인", "사실무근", "가짜 뉴스", "루머일 뿐"]
 _STOP = {"the", "a", "an", "of", "to", "in", "on", "for", "and", "or", "as", "at", "by", "after", "before", "with",
          "from", "is", "are", "be", "will", "its", "it", "this", "that", "over", "amid", "into", "new", "says",
          "say", "said", "report", "reports", "reported", "us", "u.s."}

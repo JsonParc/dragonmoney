@@ -18,13 +18,14 @@ class Quote(BaseModel):
 
 
 class OrderResult(BaseModel):
-    status: Literal["filled", "open", "rejected", "expired"]
+    status: Literal["filled", "open", "rejected", "expired", "deferred", "cancelled"]
     fill_price: float | None = None
     fill_qty: int = 0
     order_id: int
     ticker: str = ""
     side: str = ""
     message: str = ""
+    guard: str | None = None
 
 
 class Broker(Protocol):

@@ -23,11 +23,17 @@ EVENT_TAGS: dict[str, list[str]] = {
     "earnings_beat": [r"\bbeats? (estimates|expectations|earnings)?\b", r"\braises? (guidance|outlook)\b",
                       r"\brecord (profit|revenue)\b"],
     "lawsuit": [r"\blawsuit\b", r"\bsued\b", r"\bsues\b", r"\bclass action\b"],
+    "bankruptcy": [r"\bbankrupt", r"\bchapter 11\b", r"\binsolven", r"\bdefaults? on\b"],
+    "fraud": [r"\bfraud\b", r"\baccounting (irregularit|scandal)", r"\bsec charges\b", r"\bindicted\b",
+              r"\bshort seller report\b"],
+    "regulatory_rejection": [r"\bfda (rejects|denies|declines)\b", r"\bcomplete response letter\b",
+                             r"\b(rejects|denies|denied|rejected) approval\b", r"\bblocks? (the )?(deal|merger)\b"],
 }
 
 TAG_BASE_SEVERITY = {"geopolitical": 3, "oil_shock": 2, "rate_hike": 2, "rate_cut": 2, "inflation": 1,
                      "pandemic": 3, "bank_crisis": 3, "tariff": 2, "regulation": 1, "supply_chain": 1,
-                     "earnings_miss": 2, "earnings_beat": 1, "lawsuit": 1}
+                     "earnings_miss": 2, "earnings_beat": 1, "lawsuit": 1, "bankruptcy": 5, "fraud": 4,
+                     "regulatory_rejection": 3}
 
 _ALL_SECTORS = ["Information Technology", "Communication Services", "Consumer Discretionary", "Consumer Staples",
                 "Energy", "Financials", "Health Care", "Industrials", "Materials", "Real Estate", "Utilities"]

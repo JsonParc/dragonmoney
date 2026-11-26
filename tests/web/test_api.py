@@ -76,8 +76,9 @@ def test_auto_mode_needs_pin(authed, deps):
     assert deps.runtime().mode.automation == "auto"
 
 
-def test_risk_edit_without_pin(authed, deps):
-    assert authed.patch("/api/settings", json={"risk": {"stop_loss_pct": -0.1}}).status_code == 200
+def test_risk_edit_needs_pin(authed, deps):
+    assert authed.patch("/api/settings", json={"risk": {"stop_loss_pct": -0.1}}).status_code == 403
+    assert authed.patch("/api/settings", json={"risk": {"stop_loss_pct": -0.1}, "pin": "1234"}).status_code == 200
     assert deps.runtime().risk.stop_loss_pct == -0.1
 
 

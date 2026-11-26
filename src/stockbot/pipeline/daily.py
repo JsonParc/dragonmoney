@@ -106,7 +106,28 @@ class DailyCycle:
                 out.append(i)
             return out
 
-    def _pause(self, cfg, reasons: list[str]) -> None:
+    def _mark(self, name: str, session_date: date) -> None:
+        with self.d.session_factory() as s:
+            set_kv(s, f"done:{name}:{session_date.isoformat()}", True)
+            s.commit()
+
+    def done(self, name: str, session_date: date) -> bool:
+        with self.d.session_factory() as s:
+            return bool(get_kv(s, f"done:{name}:{session_date.isoformat()}"))
+
+    def _pending_buys(self) -> list:
+        from sqlalchemy import select
+
+        from stockbot.models import OrderRow
+        from stockbot.orders_store import intent_from_row
+
+        with self.d.session_factory() as s:
+            rows = s.execute(select(OrderRow).where(OrderRow.side == "buy",
+                                                    OrderRow.status.in_(["staged", "open"]))).scalars().all()
+            return [intent_from_row(r) for r in rows]
+
+    def _pause(self, reasons: list[str]) -> None:
+        cfg = self.d.runtime()  # fresh: never undo a user change made meanwhile
         if not cfg.mode.paused:
             cfg.mode.paused = True
             cfg.mode.pause_reason = "; ".join(reasons)
@@ -146,6 +167,7 @@ class DailyCycle:
                 continue
             try:
                 did, _, ints = run_debate(d, cand.ticker, session_date, "regular", pf, mkt, cfg)
+                d.health.record("debate", True, cand.ticker, now)
             except Exception as e:
                 d.health.record("debate", False, f"{cand.ticker}: {e}", now)
                 continue
@@ -157,13 +179,14 @@ class DailyCycle:
         if lim:
             trips.append(lim.message)
         if trips:
-            self._pause(cfg, trips)
+            self._pause(trips)
+        cfg = d.runtime()
         rep.paused = cfg.mode.paused
         if d.health.degraded():
             rep.notes.append("데이터/LLM 장애 지속: 신규 매수 제외 (" + ", ".join(d.health.failing()) + ")")
             intents = [i for i in intents if i.side == "sell"]
         out = apply_risk(intents, pf, mkt, cfg.budget_usd, cfg.risk, cfg.mode, circuit_breaker_tripped(pf, cfg.risk),
-                         cfg.active_rules())
+                         cfg.active_rules(), pending=self._pending_buys())
         accepted, capped = cap_daily_buys(out.accepted, mkt, cfg)
         rep.rejected = [(i.ticker, why) for i, why in out.rejected] + [(i.ticker, why) for i, why in capped]
         out.accepted = accepted
@@ -171,6 +194,7 @@ class DailyCycle:
         staged = d.executor.stage(out.accepted, cfg.mode, cfg.rebuy_auto, expires)
         rep.staged = staged.staged_ids
         self._snapshot(session_date, pf)
+        self._mark("post_close", session_date)
         self._budget_alert(now)
         return rep
 
@@ -190,15 +214,26 @@ class DailyCycle:
 
         return NewsWatcher(self.d).poll(now)
 
-    def at_open(self, session_date: date, now: datetime):
-        results = self.d.executor.execute_ready(now)
-        results += self.d.broker.process_open_orders(now)
+    def at_open(self, session_date: date, now: datetime, final: bool = False):
+        d = self.d
+        cfg = d.runtime()
+        pf = portfolio_view(d, PriceMarket(d.prices, session_date))
+        allow = not cfg.mode.paused and not circuit_breaker_tripped(pf, cfg.risk)
+        results = d.executor.execute_ready(now, allow_buys=allow)
+        results += d.broker.process_open_orders(now, allow_buys=allow)
+        self._mark("open", session_date)
+        bad = [r for r in results if r.guard == "BAD_QUOTE"]
+        if bad:
+            self._pause([f"시세 이상 ({', '.join(sorted({r.ticker for r in bad}))}): {bad[0].message}"])
+        waiting = [r for r in results if r.status == "deferred"]
+        if final and waiting:
+            self._pause([f"시세 지연이 계속되어 주문 {len(waiting)}건 미체결 ({', '.join(sorted({r.ticker for r in waiting}))})"])
         filled = [r for r in results if r.status == "filled"]
         if filled:
             lines = [f"- {r.ticker} {'매수' if r.side == 'buy' else '매도'} {r.fill_qty}주 @ ${r.fill_price:,.2f}"
                      for r in filled]
             self.d.notifier.send("✅ 체결 완료\n" + "\n".join(lines))
-        bad = [r for r in results if r.status == "rejected"]
-        if bad:
-            self.d.notifier.send("⚠️ 주문 거절\n" + "\n".join(f"- {r.ticker}: {r.message}" for r in bad))
+        rejected = [r for r in results if r.status == "rejected"]
+        if rejected:
+            self.d.notifier.send("⚠️ 주문 거절\n" + "\n".join(f"- {r.ticker}: {r.message}" for r in rejected))
         return results

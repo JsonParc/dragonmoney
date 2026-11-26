@@ -13,7 +13,8 @@ _NEG = ["war", "attack", "invasion", "missile", "plunge", "plunges", "crash", "c
         "slump", "ban", "banned", "sanction", "sanctions", "lawsuit", "sued", "miss", "misses", "downgrade",
         "downgraded", "recession", "default", "bankrupt", "bankruptcy", "fraud", "probe", "investigation",
         "layoffs", "halt", "halted", "recall", "shortage", "fears", "selloff", "sell-off", "collapse",
-        "crisis", "cut guidance", "warning", "warns", "fall", "falls", "drop", "drops", "loss", "losses"]
+        "crisis", "cut guidance", "warning", "warns", "fall", "falls", "drop", "drops", "loss", "losses",
+        "rejects", "rejected", "charges", "chapter 11", "indicted"]
 _POS = ["beat", "beats", "upgrade", "upgraded", "record", "rally", "rallies", "approve", "approved",
         "approval", "partnership", "raises guidance", "buyback", "soars on", "gain", "gains", "profit",
         "growth", "strong", "rebound", "rebounds", "outperform"]

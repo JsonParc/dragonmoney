@@ -10,7 +10,7 @@ from sqlalchemy import select
 from stockbot.config import RuntimeConfig
 from stockbot.models import DebateRow, EquitySnapshot
 from stockbot.pipeline.context import PriceMarket, portfolio_view
-from stockbot.telegram.commands import check_pin, decide_approval, last_session, set_broker_mode
+from stockbot.telegram.commands import decide_approval, last_session, pin_guard, set_broker_mode
 from stockbot.web.auth import COOKIE, MAX_AGE, Auth
 
 
@@ -23,6 +23,28 @@ def _deep_merge(base: dict, patch: dict) -> dict:
     for k, v in patch.items():
         out[k] = _deep_merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
     return out
+
+
+def _is_safe_change(body: dict, cur: RuntimeConfig) -> bool:
+    """Only changes that make the bot more conservative skip the PIN: pausing, turning auto off,
+    paper-mode product options, and re-sending current values."""
+    cur_d = cur.model_dump(mode="json")
+    for k, v in body.items():
+        if k == "rules_paper":
+            continue
+        if k == "mode" and isinstance(v, dict):
+            for mk, mv in v.items():
+                if (mk == "paused" and mv is True) or mk == "pause_reason" or (mk == "automation" and mv == "semi"):
+                    continue
+                if cur_d["mode"].get(mk) != mv:
+                    return False
+            continue
+        if isinstance(v, dict) and isinstance(cur_d.get(k), dict):
+            if any(cur_d[k].get(sk) != sv for sk, sv in v.items()):
+                return False
+        elif cur_d.get(k) != v:
+            return False
+    return True
 
 
 def build_router(deps, settings, auth: Auth, now_fn: Callable[[], datetime]) -> APIRouter:
@@ -118,13 +140,12 @@ def build_router(deps, settings, auth: Auth, now_fn: Callable[[], datetime]) -> 
         pin = body.pop("pin", None)
         cur = deps.runtime()
         mode = body.get("mode", {})
-        sensitive = (mode.get("automation") == "auto" and cur.mode.automation != "auto") \
-            or (mode.get("broker") == "real" and cur.mode.broker != "real") \
-            or ("budget_usd" in body and body["budget_usd"] != cur.budget_usd) \
-            or (mode.get("paused") is False and cur.mode.paused)             or ("rules_real" in body and any(getattr(cur.rules_real, k, None) != v
-                                             for k, v in body["rules_real"].items()))
-        if sensitive and not check_pin(settings, pin):
-            raise HTTPException(403, "이 변경에는 PIN이 필요합니다.")
+        if not _is_safe_change(body, cur):
+            res = pin_guard(deps).check(settings, pin, now_fn())
+            if res == "locked":
+                raise HTTPException(429, "PIN을 여러 번 틀려 5분간 잠겼습니다.")
+            if res != "ok":
+                raise HTTPException(403, "이 변경에는 PIN이 필요합니다.")
         if mode.get("broker") and mode["broker"] != cur.mode.broker:
             ok, msg = set_broker_mode(deps, mode["broker"])
             if not ok:
