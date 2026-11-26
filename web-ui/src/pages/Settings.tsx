@@ -6,7 +6,14 @@ type Runtime = {
   mode: { broker: string; automation: string; paused: boolean; pause_reason: string | null };
   budget_usd: number; rebuy_auto: boolean; severity_threshold: number;
   risk: Record<string, number>; cost: { monthly_cap_usd: number };
+  rules_paper: Rules; rules_real: Rules;
 };
+type Rules = { allow_etf: boolean; allow_leveraged_etf: boolean; allow_low_volume: boolean };
+const RULES: [keyof Rules, string, string][] = [
+  ["allow_etf", "ETF 매수", "SPY·QQQ·섹터·채권·금 ETF"],
+  ["allow_leveraged_etf", "레버리지·인버스 ETF", "SOXL·TQQQ·SQQQ 등. 오래 들면 감쇠 위험"],
+  ["allow_low_volume", "거래량 적은 종목", "거래대금 하한 해제 (주문량 1% 규칙은 유지)"],
+];
 type SettingsResp = { runtime: Runtime; keys: Record<string, boolean>; real_broker_configured: boolean; seat_chains: Record<string, string[]> };
 
 const RISK_FIELDS: [string, string, number][] = [
@@ -61,6 +68,23 @@ export default function Settings({ onChange }: { onChange: () => void }) {
             {rt.mode.broker === "real" ? "모의로 전환" : "실전으로 전환"}
           </button>
         </div>
+      </div>
+
+      <h2>매수 허용 상품</h2>
+      <div className="panel">
+        <div className="row sub" style={{ paddingTop: 0 }}><span /><span style={{ display: "flex", gap: 22 }}><span>모의</span><span>실전</span></span></div>
+        {RULES.map(([k, label, hint]) => (
+          <div className="row" key={k}>
+            <span>{label}<div className="sub muted">{hint}</div></span>
+            <span style={{ display: "flex", gap: 22 }}>
+              <input type="checkbox" aria-label={`모의 ${label}`} style={{ width: 22, height: 22, accentColor: "var(--chart)" }}
+                checked={rt.rules_paper[k]} onChange={(e) => save({ rules_paper: { [k]: e.target.checked } }, `모의투자: ${label} ${e.target.checked ? "허용" : "금지"}`)} />
+              <input type="checkbox" aria-label={`실전 ${label}`} style={{ width: 22, height: 22, accentColor: "var(--news)" }}
+                checked={rt.rules_real[k]} onChange={(e) => withPin(`실전: ${label} ${e.target.checked ? "허용" : "금지"}`, { rules_real: { [k]: e.target.checked } })} />
+            </span>
+          </div>
+        ))}
+        <p className="sub muted" style={{ margin: "8px 0 0" }}>실전 옵션을 바꿀 때는 PIN이 필요해요. 지금 모드에 맞는 쪽이 적용됩니다.</p>
       </div>
 
       <h2>투입금 한도</h2>

@@ -121,7 +121,8 @@ def build_router(deps, settings, auth: Auth, now_fn: Callable[[], datetime]) -> 
         sensitive = (mode.get("automation") == "auto" and cur.mode.automation != "auto") \
             or (mode.get("broker") == "real" and cur.mode.broker != "real") \
             or ("budget_usd" in body and body["budget_usd"] != cur.budget_usd) \
-            or (mode.get("paused") is False and cur.mode.paused)
+            or (mode.get("paused") is False and cur.mode.paused)             or ("rules_real" in body and any(getattr(cur.rules_real, k, None) != v
+                                             for k, v in body["rules_real"].items()))
         if sensitive and not check_pin(settings, pin):
             raise HTTPException(403, "이 변경에는 PIN이 필요합니다.")
         if mode.get("broker") and mode["broker"] != cur.mode.broker:

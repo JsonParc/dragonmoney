@@ -101,3 +101,11 @@ def test_scoreboard_news_health(authed):
     assert len(authed.get("/api/scoreboard").json()["seats"]) == 6
     assert isinstance(authed.get("/api/news").json(), list)
     assert "prices" in authed.get("/api/health").json()
+
+
+def test_real_rules_need_pin_paper_rules_do_not(authed, deps):
+    assert authed.patch("/api/settings", json={"rules_paper": {"allow_etf": True}}).status_code == 200
+    assert deps.runtime().rules_paper.allow_etf
+    assert authed.patch("/api/settings", json={"rules_real": {"allow_leveraged_etf": True}}).status_code == 403
+    assert authed.patch("/api/settings", json={"rules_real": {"allow_leveraged_etf": True}, "pin": "1234"}).status_code == 200
+    assert deps.runtime().rules_real.allow_leveraged_etf

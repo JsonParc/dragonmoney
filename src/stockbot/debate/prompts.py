@@ -43,6 +43,9 @@ def seat_prompt(seat: Seat, ctx: "DebateContext", round: int, prior: list[Opinio
               f"'{seat.role_ko}'다.\n{seat.persona}\n\n" + _RULES.format(allowed=allowed, schema=_schema()))
     lines = [f"종목: {ctx.ticker} ({ctx.sector})", f"기준일: {ctx.as_of.isoformat()}", f"현재가: {ctx.last_price:.2f}",
              f"토론 종류: {'긴급 토론' if ctx.kind == 'emergency' else '정기 토론'}"]
+    if ctx.product_note:
+        lines.append(f"상품 정보: {ctx.product_note} — 레버리지·인버스 ETF는 매일 재조정되어 오래 들고 있으면 "
+                     "기초지수가 제자리여도 가격이 감쇠할 수 있다. 보유 기간과 변동성을 반드시 고려할 것.")
     if ctx.holding:
         h = ctx.holding
         lines.append(f"보유 중: {h.qty}주, 평단 {h.avg_price:.2f}, 손익 {h.pnl_pct:+.1%}")

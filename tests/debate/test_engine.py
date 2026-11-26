@@ -77,3 +77,8 @@ def test_save_result(session_factory):
         s.commit()
         assert s.get(DebateRow, did).direction == "buy_side"
         assert s.query(OpinionRow).filter_by(debate_id=did).count() == 6
+
+
+def test_leveraged_product_warning_in_prompt():
+    req = seat_prompt(SEATS["chart_trend"], ctx(ticker="TQQQ", product_note="3배 레버리지 ETF"), 0, [])
+    assert "3배 레버리지 ETF" in req.user and "감쇠" in req.user

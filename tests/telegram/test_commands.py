@@ -151,3 +151,9 @@ def test_notifier_and_poller_use_bot_api():
     p = TelegramPoller("TOKEN", Svc(), client=client)
     p.poll_once()
     assert p.offset == 6 and any(b"got /status" in c for _, c in sent)
+
+
+def test_status_shows_product_rules(svc, deps):
+    assert "개별 주식만" in svc.handle_text(111, "/status", T).text
+    cfg = deps.runtime(); cfg.rules_paper.allow_leveraged_etf = True; deps.save_runtime(cfg)
+    assert "레버리지·인버스" in svc.handle_text(111, "/status", T).text

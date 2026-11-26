@@ -89,7 +89,7 @@ class NewsWatcher:
                 did, result, intents = run_debate(d, t, as_of, "emergency", pf, mkt, cfg, news_as_of=now)
                 debates.append(did)
                 out = apply_risk(intents, pf, mkt, cfg.budget_usd, cfg.risk, cfg.mode,
-                                 circuit_breaker_tripped(pf, cfg.risk))
+                                 circuit_breaker_tripped(pf, cfg.risk), cfg.active_rules())
                 sells = [i for i in out.accepted if i.side == "sell"]
                 buys = [i for i in out.accepted if i.side == "buy"]
                 action = result.resolved.action.value if result.resolved else "결정 없음"

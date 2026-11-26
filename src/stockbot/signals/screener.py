@@ -7,7 +7,9 @@ from pydantic import BaseModel
 
 from stockbot.config import RuntimeConfig
 from stockbot.data.prices import PriceStore
+from stockbot.data.universe import load_etfs
 from stockbot.risk.liquidity import affordable, liquidity_ok
+from stockbot.risk.rules import eligible
 from stockbot.risk.portfolio import PositionView
 from stockbot.signals.indicators import compute_indicators
 from stockbot.signals.patterns import ChartSignal, detect_patterns
@@ -66,9 +68,11 @@ def screen(
         if reasons:
             out.append(Candidate(ticker=t, score=_score(sigs), signals=sigs, reason=", ".join(reasons), held=True))
 
+    rules = cfg.active_rules()
+    scan = list(dict.fromkeys(list(universe) + [e.ticker for e in load_etfs()]))
     fresh: list[Candidate] = []
-    for t in universe:
-        if t in held:
+    for t in scan:
+        if t in held or not eligible(t, rules)[0]:
             continue
         df, sigs = _signals(prices, t, as_of)
         if df.empty:
@@ -77,7 +81,8 @@ def screen(
         if not affordable(price, budget_usd, cfg.risk):
             continue
         est_qty = int(budget_usd * cfg.risk.max_position_pct // price)
-        ok, _ = liquidity_ok(prices.adv_usd(t, as_of), prices.adv_shares(t, as_of), est_qty, cfg.risk)
+        ok, _ = liquidity_ok(prices.adv_usd(t, as_of), prices.adv_shares(t, as_of), est_qty, cfg.risk,
+                             rules.allow_low_volume)
         if not ok:
             continue
         score = _score(sigs)

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 
 from stockbot.data.prices import MACRO_TICKERS
-from stockbot.data.universe import sector_of
+from stockbot.data.universe import etf_info, sector_of
 from stockbot.data.verify import digest_line
 from stockbot.debate.engine import DebateContext
 from stockbot.market_calendar import is_trading_day, previous_trading_day, trading_session
@@ -96,10 +96,15 @@ def build_context(deps, ticker: str, as_of: date, kind: str, holding: PositionVi
     news_lines = [digest_line(c) for c in clusters if c.verification != "contradicted"][:8]
     news_lines += [f"반박된 루머: {c.headline}" for c in clusters if c.verification == "contradicted"][:3]
     price = float(bars["close"].iloc[-1]) if len(bars) else (holding.last_price if holding else 0.0)
+    etf = etf_info(ticker)
+    note = None
+    if etf:
+        note = (f"{etf.name} ({'인버스 ' if etf.leverage < 0 else ''}{abs(etf.leverage)}배 레버리지 ETF)"
+                if etf.is_leveraged else f"{etf.name} (ETF, {etf.category})")
     return DebateContext(ticker=ticker, sector=sector, as_of=as_of, kind=kind, holding=holding, last_price=price,
                          chart_signals=[s.text for s in sigs], indicator_summary=summary, chart_png=png,
                          news_digest=news_lines, macro_digest=macro_digest(deps, as_of),
-                         scoreboard_text=deps.scoreboard.summary_text())
+                         scoreboard_text=deps.scoreboard.summary_text(), product_note=note)
 
 
 def utc(ts: datetime) -> datetime:

@@ -96,6 +96,10 @@ def status_text(deps, now: datetime) -> str:
              + (f" · ⛔ 정지 ({m.pause_reason})" if m.paused else ""),
              f"총자산 ${pf.equity:,.2f} (현금 ${pf.cash:,.2f}, 보유 {len(pf.positions)}종목)",
              f"투입금 한도 ${cfg.budget_usd:,.0f}",
+             "허용 상품: " + (", ".join(n for n, on in (("ETF", cfg.active_rules().allow_etf),
+                                                    ("레버리지·인버스", cfg.active_rules().allow_leveraged_etf),
+                                                    ("저거래량", cfg.active_rules().allow_low_volume)) if on)
+                            or "개별 주식만"),
              f"승인 대기 {len(deps.approvals.pending(now))}건",
              f"AI 비용 ${deps.budget.month_spend(now):.2f} / ${cfg.cost.monthly_cap_usd:.0f}"]
     failing = deps.health.failing()

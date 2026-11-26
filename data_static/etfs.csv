@@ -1,0 +1,50 @@
+ticker,name,category,leverage
+SPY,SPDR S&P 500 ETF,Broad Market,1
+VOO,Vanguard S&P 500 ETF,Broad Market,1
+IVV,iShares Core S&P 500 ETF,Broad Market,1
+QQQ,Invesco QQQ Trust,Broad Market,1
+DIA,SPDR Dow Jones Industrial Average ETF,Broad Market,1
+IWM,iShares Russell 2000 ETF,Broad Market,1
+VTI,Vanguard Total Stock Market ETF,Broad Market,1
+XLK,Technology Select Sector SPDR,Information Technology,1
+XLC,Communication Services Select Sector SPDR,Communication Services,1
+XLY,Consumer Discretionary Select Sector SPDR,Consumer Discretionary,1
+XLP,Consumer Staples Select Sector SPDR,Consumer Staples,1
+XLE,Energy Select Sector SPDR,Energy,1
+XLF,Financial Select Sector SPDR,Financials,1
+XLV,Health Care Select Sector SPDR,Health Care,1
+XLI,Industrial Select Sector SPDR,Industrials,1
+XLB,Materials Select Sector SPDR,Materials,1
+XLRE,Real Estate Select Sector SPDR,Real Estate,1
+XLU,Utilities Select Sector SPDR,Utilities,1
+SMH,VanEck Semiconductor ETF,Information Technology,1
+SOXX,iShares Semiconductor ETF,Information Technology,1
+ARKK,ARK Innovation ETF,Information Technology,1
+TLT,iShares 20+ Year Treasury Bond ETF,Bonds,1
+IEF,iShares 7-10 Year Treasury Bond ETF,Bonds,1
+SHY,iShares 1-3 Year Treasury Bond ETF,Bonds,1
+HYG,iShares iBoxx High Yield Corporate Bond ETF,Bonds,1
+GLD,SPDR Gold Shares,Commodities,1
+SLV,iShares Silver Trust,Commodities,1
+USO,United States Oil Fund,Energy,1
+EEM,iShares MSCI Emerging Markets ETF,International,1
+EFA,iShares MSCI EAFE ETF,International,1
+TQQQ,ProShares UltraPro QQQ,Broad Market,3
+SQQQ,ProShares UltraPro Short QQQ,Broad Market,-3
+QLD,ProShares Ultra QQQ,Broad Market,2
+UPRO,ProShares UltraPro S&P500,Broad Market,3
+SPXU,ProShares UltraPro Short S&P500,Broad Market,-3
+SSO,ProShares Ultra S&P500,Broad Market,2
+SH,ProShares Short S&P500,Broad Market,-1
+PSQ,ProShares Short QQQ,Broad Market,-1
+TNA,Direxion Daily Small Cap Bull 3X,Broad Market,3
+TZA,Direxion Daily Small Cap Bear 3X,Broad Market,-3
+SOXL,Direxion Daily Semiconductor Bull 3X,Information Technology,3
+SOXS,Direxion Daily Semiconductor Bear 3X,Information Technology,-3
+TECL,Direxion Daily Technology Bull 3X,Information Technology,3
+FAS,Direxion Daily Financial Bull 3X,Financials,3
+LABU,Direxion Daily S&P Biotech Bull 3X,Health Care,3
+TMF,Direxion Daily 20+ Year Treasury Bull 3X,Bonds,3
+UCO,ProShares Ultra Bloomberg Crude Oil,Energy,2
+NVDL,GraniteShares 2x Long NVDA Daily ETF,Information Technology,2
+TSLL,Direxion Daily TSLA Bull 2X,Consumer Discretionary,2

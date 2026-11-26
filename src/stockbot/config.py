@@ -85,6 +85,14 @@ class ModeState(BaseModel):
     pause_reason: str | None = None
 
 
+class TradingRules(BaseModel):
+    """What the bot may buy. Kept separately for paper and real trading."""
+
+    allow_etf: bool = False            # plain ETFs (SPY, QQQ, sector/bond/gold ETFs)
+    allow_leveraged_etf: bool = False  # leveraged / inverse products (SOXL, TQQQ, SQQQ ...)
+    allow_low_volume: bool = False     # drop the min average dollar-volume floor (1%-of-volume order cap stays)
+
+
 class SeatAssignment(BaseModel):
     seat_id: str
     providers: list[str]
@@ -101,3 +109,8 @@ class RuntimeConfig(BaseModel):
     news_poll_minutes: int = 10
     severity_threshold: int = 4
     report_time_kst: str = "17:30"
+    rules_paper: TradingRules = Field(default_factory=TradingRules)
+    rules_real: TradingRules = Field(default_factory=TradingRules)
+
+    def active_rules(self) -> TradingRules:
+        return self.rules_real if self.mode.broker == "real" else self.rules_paper

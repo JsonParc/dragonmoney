@@ -4,8 +4,9 @@ from __future__ import annotations
 from stockbot.config import RiskConfig
 
 
-def liquidity_ok(adv_usd: float, adv_shares: float, qty: int, cfg: RiskConfig) -> tuple[bool, str]:
-    if adv_usd < cfg.min_adv_usd:
+def liquidity_ok(adv_usd: float, adv_shares: float, qty: int, cfg: RiskConfig,
+                 allow_low_volume: bool = False) -> tuple[bool, str]:
+    if not allow_low_volume and adv_usd < cfg.min_adv_usd:
         return False, f"유동성 부족: 20일 평균 거래대금 ${adv_usd:,.0f} < ${cfg.min_adv_usd:,.0f}"
     if qty > cfg.max_adv_fraction * adv_shares:
         return False, f"유동성 부족: 주문 {qty}주 > 20일 평균 거래량의 {cfg.max_adv_fraction:.0%}"

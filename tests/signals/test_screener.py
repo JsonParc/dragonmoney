@@ -81,3 +81,26 @@ def test_render_chart_png(tmp_path):
     df = make_df([100 + (i % 7) for i in range(130)])
     p = render_chart_png(df, tmp_path / "c.png")
     assert p.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+@pytest.fixture
+def etf_prices(session_factory):
+    frames = {t: _series(100, 101, last_vol=600_000 * 6) for t in ("SPY", "TQQQ", "AAPL")}
+    frames["TINY"] = _series(100, 101, vol=50_000, last_vol=50_000 * 9)
+    store = PriceStore(session_factory, MultiFetcher(frames))
+    store.ensure(list(frames), date(2024, 1, 1), AS_OF)
+    return store
+
+
+def _tickers(store, **rules):
+    cfg = RuntimeConfig()
+    for k, v in rules.items():
+        setattr(cfg.rules_paper, k, v)
+    return {c.ticker for c in screen(AS_OF, ["AAPL", "TINY"], {}, store, {}, 10_000, cfg)}
+
+
+def test_screen_product_options(etf_prices):
+    assert _tickers(etf_prices) == {"AAPL"}
+    assert "SPY" in _tickers(etf_prices, allow_etf=True) and "TQQQ" not in _tickers(etf_prices, allow_etf=True)
+    assert "TQQQ" in _tickers(etf_prices, allow_leveraged_etf=True)
+    assert "TINY" in _tickers(etf_prices, allow_low_volume=True)

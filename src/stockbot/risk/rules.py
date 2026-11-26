@@ -7,9 +7,10 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from stockbot.config import ModeState, RiskConfig
+from stockbot.config import ModeState, RiskConfig, TradingRules
 from stockbot.debate.engine import DebateResult
 from stockbot.debate.schema import Action
+from stockbot.data.universe import etf_info
 from stockbot.market_calendar import add_trading_days, trading_session
 from stockbot.risk.liquidity import affordable, liquidity_ok
 from stockbot.risk.portfolio import MarketView, PortfolioView
@@ -83,8 +84,24 @@ def decision_to_intents(result: DebateResult, decision_id: int, pf: PortfolioVie
     return []
 
 
+def eligible(ticker: str, rules: TradingRules) -> tuple[bool, str]:
+    """Product-type rules (ETF / leveraged-inverse ETF) for buys."""
+    etf = etf_info(ticker)
+    if etf is None:
+        return True, ""
+    if etf.is_leveraged:
+        if rules.allow_leveraged_etf:
+            return True, ""
+        kind = "인버스" if etf.leverage < 0 else f"{etf.leverage}배 레버리지"
+        return False, f"{kind} 상품 매수 비허용 (설정에서 레버리지·인버스 ETF 허용 필요)"
+    if rules.allow_etf:
+        return True, ""
+    return False, "ETF 매수 비허용 (설정에서 ETF 허용 필요)"
+
+
 def apply_risk(intents: list[OrderIntent], pf: PortfolioView, mkt: MarketView, budget_usd: float, cfg: RiskConfig,
-               mode: ModeState, circuit_tripped: bool) -> RiskOutcome:
+               mode: ModeState, circuit_tripped: bool, rules: TradingRules | None = None) -> RiskOutcome:
+    rules = rules or TradingRules()
     out = RiskOutcome()
     cash = pf.cash
     held = {t: p.qty for t, p in pf.positions.items()}
@@ -111,6 +128,10 @@ def apply_risk(intents: list[OrderIntent], pf: PortfolioView, mkt: MarketView, b
         if circuit_tripped:
             out.rejected.append((i, "서킷브레이커 발동 중 (신규 매수 중단)"))
             continue
+        ok, why = eligible(i.ticker, rules)
+        if not ok:
+            out.rejected.append((i, why))
+            continue
         price = i.limit_price or mkt.last_price(i.ticker)
         if price <= 0:
             out.rejected.append((i, "가격 정보 없음"))
@@ -129,7 +150,7 @@ def apply_risk(intents: list[OrderIntent], pf: PortfolioView, mkt: MarketView, b
         if qty <= 0:
             out.rejected.append((i, "투입금/현금/종목 비중 한도 초과"))
             continue
-        ok, why = liquidity_ok(mkt.adv_usd(i.ticker), mkt.adv_shares(i.ticker), qty, cfg)
+        ok, why = liquidity_ok(mkt.adv_usd(i.ticker), mkt.adv_shares(i.ticker), qty, cfg, rules.allow_low_volume)
         if not ok:
             out.rejected.append((i, why))
             continue

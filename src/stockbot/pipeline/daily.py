@@ -61,8 +61,13 @@ class DailyCycle:
         self.d = deps
 
     def _refresh(self, session_date: date, now: datetime, held: list[str]) -> None:
+        from stockbot.data.universe import load_etfs
+        from stockbot.risk.rules import eligible
+
         d = self.d
-        tickers = sorted(set(d.universe) | set(held) | set(MACRO_TICKERS.values()) | set(SECTOR_ETFS.values()))
+        rules = d.runtime().active_rules()
+        etfs = {e.ticker for e in load_etfs() if eligible(e.ticker, rules)[0]}
+        tickers = sorted(set(d.universe) | set(held) | set(MACRO_TICKERS.values()) | set(SECTOR_ETFS.values()) | etfs)
         try:
             d.prices.ensure(tickers, session_date - timedelta(days=HISTORY_DAYS), session_date)
             d.health.record("prices", True, f"{len(tickers)} tickers", now)
@@ -157,7 +162,8 @@ class DailyCycle:
         if d.health.degraded():
             rep.notes.append("데이터/LLM 장애 지속: 신규 매수 제외 (" + ", ".join(d.health.failing()) + ")")
             intents = [i for i in intents if i.side == "sell"]
-        out = apply_risk(intents, pf, mkt, cfg.budget_usd, cfg.risk, cfg.mode, circuit_breaker_tripped(pf, cfg.risk))
+        out = apply_risk(intents, pf, mkt, cfg.budget_usd, cfg.risk, cfg.mode, circuit_breaker_tripped(pf, cfg.risk),
+                         cfg.active_rules())
         accepted, capped = cap_daily_buys(out.accepted, mkt, cfg)
         rep.rejected = [(i.ticker, why) for i, why in out.rejected] + [(i.ticker, why) for i, why in capped]
         out.accepted = accepted
