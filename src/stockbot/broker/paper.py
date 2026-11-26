@@ -63,6 +63,12 @@ class PaperBroker:
         return [FillRecord(ticker=r.ticker, side=r.side, qty=r.fill_qty, price=r.fill_price,
                            filled_at=aware_utc(r.filled_at)) for r in rows]
 
+    def realized_pnls(self) -> list[float]:
+        with self._sf() as s:
+            return [r for r in s.execute(select(OrderRow.realized_pnl).where(
+                OrderRow.status == "filled", OrderRow.side == "sell", OrderRow.broker == self.name,
+                OrderRow.realized_pnl.is_not(None)).order_by(OrderRow.filled_at, OrderRow.id)).scalars()]
+
     # ------------------------------------------------------------ orders
     @staticmethod
     def _result(r: OrderRow) -> OrderResult:
@@ -126,6 +132,7 @@ class PaperBroker:
                 return
             fee = price * qty * self.comm
             cash.cash += price * qty - fee
+            row.realized_pnl = (price - pos.avg_price) * qty - fee
             pos.qty -= qty
         row.status, row.fill_price, row.fill_qty, row.commission = "filled", price, qty, fee
         row.filled_at = naive_utc(now)

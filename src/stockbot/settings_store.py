@@ -20,3 +20,16 @@ def save_runtime(session: Session, cfg: RuntimeConfig) -> None:
         row.value = data
     else:
         session.add(RuntimeSetting(key=_KEY, value=data))
+
+
+def get_kv(session: Session, key: str, default=None):
+    row = session.get(RuntimeSetting, f"kv:{key}")
+    return row.value.get("v", default) if row else default
+
+
+def set_kv(session: Session, key: str, value) -> None:
+    row = session.get(RuntimeSetting, f"kv:{key}")
+    if row:
+        row.value = {"v": value}
+    else:
+        session.add(RuntimeSetting(key=f"kv:{key}", value={"v": value}))

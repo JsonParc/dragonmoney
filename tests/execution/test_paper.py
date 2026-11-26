@@ -56,3 +56,10 @@ def test_resting_limit_expires(session_factory):
     p.place(rebuy("T", 10, limit=90, expires=NOW + timedelta(hours=1)), NOW)
     out = p.process_open_orders(NOW + timedelta(hours=2))
     assert out[0].status == "expired" and "T" not in p.positions()
+
+
+def test_sell_records_realized_pnl(session_factory):
+    p = PaperBroker(session_factory, quotes(100.0, 90.0), initial_cash=10_000, slippage_bps=0, commission_rate=0)
+    p.place(buy("T", 10, key="b1"), NOW)
+    p.place(OrderIntent(ticker="T", side="sell", qty=10, kind="sell", reason="x", idempotency_key="s1"), NOW)
+    assert p.realized_pnls() == [pytest.approx(-100.0)]

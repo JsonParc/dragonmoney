@@ -165,6 +165,7 @@ class OrderRow(Base):
     fill_price: Mapped[float | None] = mapped_column(Float, nullable=True)
     fill_qty: Mapped[int | None] = mapped_column(Integer, nullable=True)
     commission: Mapped[float | None] = mapped_column(Float, nullable=True)
+    realized_pnl: Mapped[float | None] = mapped_column(Float, nullable=True)
     decision_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -195,3 +196,21 @@ class ApprovalRowDB(Base):
     status: Mapped[str] = mapped_column(String)
     expires_at: Mapped[_dt] = mapped_column(DateTime)
     decided_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
+
+
+class HealthEvent(Base):
+    __tablename__ = "health_events"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    component: Mapped[str] = mapped_column(String, index=True)
+    ok: Mapped[bool] = mapped_column(Boolean)
+    detail: Mapped[str] = mapped_column(Text, default="")
+    at: Mapped[_dt] = mapped_column(DateTime)
+
+
+class GuardEvent(Base):
+    __tablename__ = "guard_events"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String)
+    message: Mapped[str] = mapped_column(Text)
+    at: Mapped[_dt] = mapped_column(DateTime)
+    cleared_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
