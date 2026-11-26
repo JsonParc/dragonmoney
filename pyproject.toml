@@ -11,6 +11,9 @@ dependencies = [
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
     "sqlalchemy>=2.0",
+    "exchange_calendars>=4.5",
+    "tzdata",
+    "pandas>=2.2",
 ]
 
 [project.optional-dependencies]
@@ -28,3 +31,6 @@ markers = [
     "slow: slow tests (deselected by default)",
 ]
 addopts = "-m 'not network and not slow'"
+filterwarnings = [
+    "ignore:.*returning an ndarray that drops timezone.*",
+]
