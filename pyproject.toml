@@ -24,6 +24,7 @@ dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
     "itsdangerous>=2.1",
+    "apscheduler>=3.10,<4",
 ]
 
 [project.optional-dependencies]

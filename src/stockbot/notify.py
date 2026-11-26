@@ -24,5 +24,9 @@ class ListNotifier:
 
 class ConsoleNotifier:
     def send(self, text: str, buttons: list[tuple[str, str]] | None = None) -> None:
+        import sys
+
         extra = f"  [buttons: {', '.join(b[0] + '=' + b[1] for b in buttons)}]" if buttons else ""
-        print(f"[notify] {text}{extra}")
+        line = f"[notify] {text}{extra}"
+        enc = getattr(sys.stdout, "encoding", None) or "utf-8"
+        print(line.encode(enc, errors="replace").decode(enc, errors="replace"))

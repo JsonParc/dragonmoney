@@ -114,7 +114,7 @@ export function DebateFloor({ rounds, direction, switched }: { rounds: Opinion[]
           });
           return (
             <div className="floor-round" role="row" key={ri}>
-              <span className="r">{ri === 0 ? "첫 의견" : `반박 ${ri}`}</span>
+              <span className="r">{ri === 0 ? "처음" : `반박 ${ri}`}</span>
               {lanes.map((l, li) => <div key={li} className={`lane ${ri === last && li === win ? "win" : ""}`}>{l}</div>)}
             </div>
           );

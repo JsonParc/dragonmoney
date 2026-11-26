@@ -34,6 +34,7 @@
     --down: #e57a66;
     --warn: #e0b04a;
   }
+  .btn.primary { color: #0e1a20; }
 }
 
 * { box-sizing: border-box; }
@@ -63,7 +64,7 @@ a { color: inherit; }
 .tabs a { position: relative; text-align: center; padding: 12px 4px 14px; font-size: 0.8125rem; text-decoration: none; color: var(--muted); }
 .tabs a.active { color: var(--ink); font-weight: 600; }
 .tabs a.active::before { content: ""; position: absolute; top: 0; left: 28%; right: 28%; height: 3px; border-radius: 0 0 3px 3px; background: var(--chart); }
-.tabs .badge { position: absolute; top: 6px; right: 18%; min-width: 18px; padding: 0 5px; border-radius: 9px;
+.tabs .badge { position: absolute; top: 4px; left: calc(50% + 14px); min-width: 18px; padding: 0 5px; border-radius: 9px;
   background: var(--down); color: #fff; font-size: 0.6875rem; line-height: 18px; }
 
 h1 { font-size: 1.5rem; line-height: 1.25; margin: 20px 0 6px; letter-spacing: -0.01em; }
@@ -80,7 +81,7 @@ p { margin: 0 0 10px; }
 
 .equity { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.02em; margin: 2px 0 0; }
 
-.btn { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 10px 16px; min-height: 44px; cursor: pointer; }
+.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 10px 16px; min-height: 44px; cursor: pointer; }
 .btn.primary { background: var(--chart); border-color: var(--chart); color: #fff; font-weight: 600; }
 .btn.danger { color: var(--down); border-color: var(--down); }
 .btn:disabled { opacity: 0.5; cursor: default; }
@@ -106,7 +107,7 @@ p { margin: 0 0 10px; }
 
 /* the debate floor: seats placed in buy / hold / sell lanes, one band per round */
 .floor { display: grid; gap: 6px; }
-.floor-head, .floor-round { display: grid; grid-template-columns: 34px 1fr 1fr 1fr; gap: 6px; align-items: start; }
+.floor-head, .floor-round { display: grid; grid-template-columns: 46px 1fr 1fr 1fr; gap: 6px; align-items: start; }
 .floor-head span { font-size: 0.8125rem; color: var(--muted); text-align: center; }
 .floor-head span:first-child { text-align: left; }
 .floor-round .r { font-size: 0.75rem; color: var(--muted); padding-top: 6px; }
@@ -141,5 +142,5 @@ p { margin: 0 0 10px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .seat.moved { animation: settle 0.5s ease-out; }
-  @keyframes settle { from { transform: translateX(-10px); opacity: 0.3; } to { transform: none; opacity: 1; } }
+  @keyframes settle { from { transform: translateX(-10px); } to { transform: none; opacity: 1; } }
 }

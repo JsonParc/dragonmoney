@@ -3,6 +3,8 @@ import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "rec
 import type { Dashboard as Dash } from "../api";
 import { pct, usd } from "../components";
 
+const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
 export default function Dashboard({ dash }: { dash: Dash | null; refresh: () => void }) {
   if (!dash) return <p className="muted" style={{ marginTop: 24 }}>불러오는 중…</p>;
   const ret = dash.budget_usd ? dash.equity / dash.budget_usd - 1 : 0;
@@ -39,8 +41,8 @@ export default function Dashboard({ dash }: { dash: Dash | null; refresh: () => 
               <XAxis dataKey="date" hide />
               <YAxis domain={["auto", "auto"]} hide />
               <Tooltip formatter={(v: number) => usd(v)} labelFormatter={(l) => l} />
-              <Line type="monotone" dataKey="equity" name="봇" stroke="var(--chart)" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="spy" name="SPY 보유 시" stroke="var(--muted)" strokeDasharray="4 3" dot={false} />
+              <Line type="monotone" dataKey="equity" name="봇" stroke={cssVar("--chart")} strokeWidth={2} dot={false} isAnimationActive={false} />
+              <Line type="monotone" dataKey="spy" name="SPY 보유 시" stroke={cssVar("--muted")} strokeDasharray="4 3" dot={false} isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>
