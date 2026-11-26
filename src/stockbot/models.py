@@ -214,3 +214,11 @@ class GuardEvent(Base):
     message: Mapped[str] = mapped_column(Text)
     at: Mapped[_dt] = mapped_column(DateTime)
     cleared_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
+
+
+class EquitySnapshot(Base):
+    __tablename__ = "equity_snapshots"
+    date: Mapped[_date] = mapped_column(Date, primary_key=True)
+    equity: Mapped[float] = mapped_column(Float)
+    cash: Mapped[float] = mapped_column(Float)
+    spy_close: Mapped[float | None] = mapped_column(Float, nullable=True)

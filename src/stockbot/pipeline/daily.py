@@ -164,8 +164,20 @@ class DailyCycle:
         expires = trading_session(next_trading_day(session_date)).open_kst
         staged = d.executor.stage(out.accepted, cfg.mode, cfg.rebuy_auto, expires)
         rep.staged = staged.staged_ids
+        self._snapshot(session_date, pf)
         self._budget_alert(now)
         return rep
+
+    def _snapshot(self, session_date: date, pf) -> None:
+        from stockbot.models import EquitySnapshot
+
+        try:
+            spy = self.d.prices.close_on(MACRO_TICKERS["spy"], session_date)
+        except KeyError:
+            spy = None
+        with self.d.session_factory() as s:
+            s.merge(EquitySnapshot(date=session_date, equity=pf.equity, cash=pf.cash, spy_close=spy))
+            s.commit()
 
     def pre_open(self, session_date: date, now: datetime) -> list[int]:
         from stockbot.pipeline.news_watch import NewsWatcher

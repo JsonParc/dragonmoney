@@ -21,6 +21,9 @@ dependencies = [
     "httpx>=0.27",
     "openai>=1.40",
     "anthropic>=1.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "itsdangerous>=2.1",
 ]
 
 [project.optional-dependencies]
@@ -32,7 +35,7 @@ packages = ["src/stockbot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "tests", "tests/signals", "tests/llm", "tests/debate", "tests/scoring", "tests/risk", "tests/execution", "tests/pipeline", "tests/report", "tests/telegram"]
+pythonpath = ["src", "tests", "tests/signals", "tests/llm", "tests/debate", "tests/scoring", "tests/risk", "tests/execution", "tests/pipeline", "tests/report", "tests/telegram", "tests/web"]
 markers = [
     "network: needs internet access (deselected by default)",
     "slow: slow tests (deselected by default)",
