@@ -1,1 +1,11 @@
 .superpowers/
+.env
+data/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+web-ui/node_modules/
+web-ui/dist/
+scratch/
+*.egg-info/
