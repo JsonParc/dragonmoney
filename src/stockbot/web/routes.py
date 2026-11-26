@@ -5,12 +5,13 @@ from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
-from sqlalchemy import select
+
+from fastapi.responses import JSONResponse
 
 from stockbot.config import RuntimeConfig
-from stockbot.models import DebateRow, EquitySnapshot
-from stockbot.pipeline.context import PriceMarket, portfolio_view
-from stockbot.telegram.commands import decide_approval, last_session, pin_guard, set_broker_mode
+from stockbot.state_file import export_state, import_state
+from stockbot.telegram.commands import decide_approval, pin_guard, set_broker_mode
+from stockbot.web import views
 from stockbot.web.auth import COOKIE, MAX_AGE, Auth
 
 
@@ -64,44 +65,22 @@ def build_router(deps, settings, auth: Auth, now_fn: Callable[[], datetime]) -> 
 
     @r.get("/dashboard", dependencies=[need])
     def dashboard():
-        now = now_fn()
-        cfg = deps.runtime()
-        pf = portfolio_view(deps, PriceMarket(deps.prices, last_session(now)))
-        with deps.session_factory() as s:
-            snaps = s.execute(select(EquitySnapshot).order_by(EquitySnapshot.date)).scalars().all()
-        base = next((x for x in snaps if x.spy_close), None)
-        curve = [{"date": x.date.isoformat(), "equity": x.equity,
-                  "spy": (x.spy_close / base.spy_close * snaps[0].equity) if (base and x.spy_close) else None}
-                 for x in snaps]
-        return {
-            "equity": pf.equity, "cash": pf.cash, "peak_equity": pf.peak_equity, "budget_usd": cfg.budget_usd,
-            "positions": [{**p.model_dump(), "pnl_pct": p.pnl_pct, "value": p.value} for p in pf.positions.values()],
-            "mode": cfg.mode.model_dump(), "pending_count": len(deps.approvals.pending(now)),
-            "health": deps.health.status(), "failing": deps.health.failing(),
-            "cost": {"spend": deps.budget.month_spend(now), "cap": cfg.cost.monthly_cap_usd,
-                     "state": deps.budget.state(now)},
-            "equity_curve": curve,
-        }
+        return views.dashboard(deps, now_fn())
 
     @r.get("/debates", dependencies=[need])
     def debates(limit: int = 20):
-        with deps.session_factory() as s:
-            rows = s.execute(select(DebateRow).order_by(DebateRow.id.desc()).limit(min(limit, 200))).scalars().all()
-        return [{"id": x.id, "ticker": x.ticker, "as_of": x.as_of.isoformat(), "kind": x.kind, "direction": x.direction,
-                 "deadlock": x.deadlock, "persuading_team": x.persuading_team, "summary": x.referee_summary,
-                 "action": ((x.result_json or {}).get("resolved") or {}).get("action")} for x in rows]
+        return views.debates(deps, limit)
 
     @r.get("/debates/{debate_id}", dependencies=[need])
     def debate(debate_id: int):
-        with deps.session_factory() as s:
-            x = s.get(DebateRow, debate_id)
-            if x is None:
-                raise HTTPException(404, "토론 기록이 없습니다.")
-            return {"id": x.id, **(x.result_json or {})}
+        d = views.debate_detail(deps, debate_id)
+        if d is None:
+            raise HTTPException(404, "토론 기록이 없습니다.")
+        return d
 
     @r.get("/approvals", dependencies=[need])
     def approvals():
-        return [a.model_dump(mode="json") for a in deps.approvals.pending(now_fn())]
+        return views.approvals(deps, now_fn())
 
     @r.post("/approvals/{approval_id}/{decision}", dependencies=[need])
     def decide(approval_id: int, decision: str):
@@ -111,12 +90,11 @@ def build_router(deps, settings, auth: Auth, now_fn: Callable[[], datetime]) -> 
 
     @r.get("/scoreboard", dependencies=[need])
     def scoreboard():
-        w = deps.scoreboard.weights()
-        return {"seats": [{"seat_id": k, "weight": v} for k, v in w.items()], "summary": deps.scoreboard.summary_text()}
+        return views.scoreboard(deps)
 
     @r.get("/news", dependencies=[need])
     def news(min_severity: int = 0, hours: int = 72):
-        return [c.model_dump(mode="json") for c in deps.verifier.recent(now_fn(), hours) if c.severity >= min_severity]
+        return views.news(deps, now_fn(), min_severity, hours)
 
     @r.get("/health", dependencies=[need])
     def health():
@@ -124,15 +102,28 @@ def build_router(deps, settings, auth: Auth, now_fn: Callable[[], datetime]) -> 
 
     @r.get("/settings", dependencies=[need])
     def get_settings():
-        cfg = deps.runtime()
-        st = deps.settings
-        return {"runtime": cfg.model_dump(mode="json"),
-                "keys": {"finnhub": bool(st.finnhub_key), "gemini": bool(st.gemini_key), "groq": bool(st.groq_key),
-                         "openai": bool(st.openai_key), "anthropic": bool(st.anthropic_key),
-                         "telegram": bool(st.telegram_token)},
-                "real_broker_configured": getattr(deps, "real_broker", None) is not None,
-                "seat_chains": {k: [c.provider + ":" + c.model for c in v]
-                                for k, v in (deps.router.chains.items() if deps.router else [])}}
+        return views.settings_view(deps)
+
+    @r.get("/state/export", dependencies=[need])
+    def state_export(with_cache: bool = False):
+        now = now_fn()
+        data = export_state(deps, now, include_cache=with_cache)
+        name = f"dragonmoney-state-{now.strftime('%Y%m%d-%H%M')}.json"
+        return JSONResponse(data, headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+    @r.post("/state/import", dependencies=[need])
+    async def state_import(request: Request):
+        body: dict[str, Any] = await request.json()
+        res = pin_guard(deps).check(settings, body.get("pin"), now_fn())
+        if res == "locked":
+            raise HTTPException(429, "PIN을 여러 번 틀려 5분간 잠겼습니다.")
+        if res != "ok":
+            raise HTTPException(403, "학습 파일을 불러오려면 PIN이 필요합니다.")
+        try:
+            counts = import_state(deps, body.get("file") or {})
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+        return {"ok": True, "imported": counts}
 
     @r.patch("/settings", dependencies=[need])
     async def patch_settings(request: Request):

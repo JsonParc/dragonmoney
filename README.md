@@ -15,7 +15,19 @@
 
 ## Render 배포
 
-1. Render 대시보드 → **New → Blueprint** → 이 저장소 선택 (`render.yaml` 사용)
+### 정적 사이트로 (무료, 지금 테스트용)
+봇은 돌지 않고, **학습 파일을 읽기 전용으로 보여주는 화면**만 올라갑니다.
+1. Render → **New → Static Site** → 이 저장소
+2. Build Command: `cd web-ui && npm ci && npm run build` / Publish Directory: `web-ui/dist`
+3. 기본으로 `web-ui/public/stockbot-state.json`(데모 데이터)을 보여줍니다. 내 PC에서 학습한 결과를 올리려면:
+   `start.bat --export web-ui\public\stockbot-state.json` → 커밋·푸시 → 자동 재배포
+   (화면의 **학습 파일 열기**로 올리지 않고 내 폰에서만 열어볼 수도 있습니다)
+- 이 파일은 공개 주소로 누구나 볼 수 있습니다. 실제 계좌가 생기면 올리지 마세요.
+
+### 동적 사이트로 (요금제 올렸을 때)
+같은 코드가 서버를 감지하면 자동으로 실제 봇 화면(로그인·승인·설정·텔레그램)으로 동작합니다.
+
+1. Render 대시보드 → **New → Blueprint** → 이 저장소 선택 (`render.yaml` 사용, Docker 웹 서비스)
 2. 환경변수 입력: `STOCKBOT_WEB_PASSWORD`, `STOCKBOT_PIN`, 텔레그램 토큰·chat id, Finnhub·Gemini·Groq 키
 3. 배포 후 `https://<서비스이름>.onrender.com` 접속
 
@@ -30,6 +42,11 @@ SLBM 위키 밸런스 패치 봇과 **같은 봇 토큰**을 씁니다. 위키�
 - **15분 동안 접속이 없으면 서버가 잠듭니다.** 잠들면 스케줄러와 텔레그램도 멈춥니다. 외부 모니터링(예: UptimeRobot)으로 `/healthz` 를 5분마다 호출하면 깨어 있게 할 수 있습니다.
 - **디스크가 유지되지 않습니다.** 재시작·재배포 때마다 DB(모의 계좌, 토론 기록, 점수판)가 초기화됩니다. 장기 운영은 영구 디스크가 있는 유료 플랜이나 외부 DB가 필요합니다.
 - 메모리 512MB라 FinBERT(선택 기능)는 쓰지 않고 키워드 기반 뉴스 판정을 씁니다.
+
+## 학습 파일 (내보내기 · 불러오기)
+- 내보내기: `start.bat --export 파일.json` (LLM 응답 캐시까지: `--with-cache`) / 동적 사이트 설정 화면의 **내보내기**
+- 불러오기: `start.bat --import 파일.json` / 동적 사이트 설정 화면의 **불러오기** (PIN 필요, 현재 기록을 덮어씀)
+- 담기는 것: 설정, 좌석 점수·가중치, 토론 기록, 모의 계좌, 자산 추이. 키·PIN·비밀번호는 절대 담기지 않습니다.
 
 ## 개발
 

@@ -10,3 +10,4 @@ web-ui/dist/
 scratch/
 *.egg-info/
 web-ui/tsconfig.tsbuildinfo
+.vscode/

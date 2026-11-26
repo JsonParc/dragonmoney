@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { api } from "../api";
 import { PinModal, Toast, useLoad } from "../components";
+import { siteMode } from "../site";
 
 type Runtime = {
   mode: { broker: string; automation: string; paused: boolean; pause_reason: string | null };
@@ -32,16 +34,27 @@ export default function Settings({ onChange }: { onChange: () => void }) {
   const [budget, setBudget] = useState("");
   const [pinFor, setPinFor] = useState<{ title: string; patch: object } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [importFile, setImportFile] = useState<unknown>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (data) { setRisk(data.runtime.risk); setBudget(String(data.runtime.budget_usd)); } }, [data]);
   if (!data) return <p className="muted" style={{ marginTop: 24 }}>불러오는 중…</p>;
   const rt = data.runtime;
 
   const flash = (t: string) => { setToast(t); setTimeout(() => setToast(null), 2500); };
+  const isStatic = siteMode() === "static";
   const save = async (patch: object, msg: string) => {
-    await api.patch("/settings", patch); flash(msg); reload(); onChange();
+    try { await api.patch("/settings", patch); flash(msg); reload(); onChange(); }
+    catch (e) { flash((e as Error).message); if ((e as { status?: number }).status === 403) throw e; }
   };
-  const withPin = (title: string, patch: object) => setPinFor({ title, patch });
+  const withPin = (title: string, patch: object) => isStatic ? flash("정적 사이트에서는 바꿀 수 없어요.") : setPinFor({ title, patch });
+  const download = async () => {
+    const data = await api.get<object>("/state/export");
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = `dragonmoney-state-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <>
@@ -108,6 +121,24 @@ export default function Settings({ onChange }: { onChange: () => void }) {
         <button className="btn primary" onClick={() => withPin("리스크 규칙 저장", { risk })}>리스크 규칙 저장</button>
       </div>
 
+      <h2>학습 파일</h2>
+      <div className="panel">
+        <p className="muted" style={{ marginTop: 0 }}>
+          {isStatic ? "정적 사이트는 학습 파일을 보기만 해요. 다른 파일은 위의 '학습 파일 열기'로 볼 수 있어요."
+            : "PC에서 학습한 결과(설정·점수판·토론 기록·모의 계좌)를 파일로 옮길 수 있어요."}
+        </p>
+        <div className="actions">
+          <button className="btn" onClick={download}>내보내기</button>
+          {!isStatic && <button className="btn primary" onClick={() => fileInput.current?.click()}>불러오기</button>}
+        </div>
+        <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={async (e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (!f) return;
+          try { setImportFile(JSON.parse(await f.text())); } catch { flash("JSON 파일이 아닙니다."); }
+        }} />
+      </div>
+
       <h2>연결 상태</h2>
       <div className="panel rows">
         {Object.entries(data.keys).map(([k, ok]) => (
@@ -123,9 +154,13 @@ export default function Settings({ onChange }: { onChange: () => void }) {
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <button className="btn" onClick={async () => { await api.post("/logout"); window.dispatchEvent(new Event("stockbot:logout")); }}>로그아웃</button>
+        {!isStatic && <button className="btn" onClick={async () => { await api.post("/logout"); window.dispatchEvent(new Event("stockbot:logout")); }}>로그아웃</button>}
       </div>
 
+      {importFile !== null && <PinModal title="학습 파일 불러오기 (현재 기록을 덮어씀)" onClose={() => setImportFile(null)} onSubmit={async (pin) => {
+        const r = await api.post<{ imported: Record<string, number> }>("/state/import", { file: importFile, pin });
+        setImportFile(null); flash(`불러왔어요: 토론 ${r.imported.debates ?? 0}건`); reload(); onChange();
+      }} />}
       {pinFor && <PinModal title={pinFor.title} onClose={() => setPinFor(null)} onSubmit={async (pin) => {
         await save({ ...pinFor.patch, pin }, `${pinFor.title} 완료`); setPinFor(null);
       }} />}

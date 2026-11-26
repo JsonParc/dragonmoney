@@ -33,10 +33,43 @@ def _dry_run() -> int:
     return 0
 
 
+def _state_cli(a) -> int:
+    import json
+    from datetime import timezone
+
+    from stockbot.state_file import export_state, import_state
+
+    now = datetime.now(timezone.utc)
+    if a.export_demo:
+        from stockbot.demo import build_demo
+
+        deps, _ = build_demo()
+        data = {**export_state(deps, now), "label": "데모 — 가짜 데이터"}
+        Path(a.export_demo).write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        print(f"데모 학습 파일 저장: {a.export_demo}")
+        return 0
+    from stockbot.app_factory import build_deps
+    from stockbot.config import Settings
+
+    deps = build_deps(Settings())
+    if a.import_file:
+        counts = import_state(deps, json.loads(Path(a.import_file).read_text(encoding="utf-8")))
+        print("불러옴:", ", ".join(f"{k} {v}건" for k, v in counts.items()))
+    if a.export:
+        Path(a.export).write_text(json.dumps(export_state(deps, now, include_cache=a.with_cache), ensure_ascii=False),
+                                  encoding="utf-8")
+        print(f"학습 파일 저장: {a.export}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="stockbot")
     p.add_argument("--dry-run", action="store_true", help="오늘·내일 스케줄과 상태만 출력")
     p.add_argument("--demo", action="store_true", help="가짜 데이터로 관리페이지만 실행 (비밀번호 demo)")
+    p.add_argument("--export", metavar="FILE", help="학습 파일 내보내기 (현재 DB → JSON)")
+    p.add_argument("--with-cache", action="store_true", help="내보낼 때 LLM 응답 캐시도 포함")
+    p.add_argument("--import", dest="import_file", metavar="FILE", help="학습 파일 불러오기 (JSON → 현재 DB)")
+    p.add_argument("--export-demo", metavar="FILE", help="가짜 데이터로 만든 학습 파일 (정적 사이트 기본 화면용)")
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
     a = p.parse_args(argv)
@@ -44,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if a.dry_run:
         return _dry_run()
+    if a.export or a.import_file or a.export_demo:
+        return _state_cli(a)
 
     import uvicorn
 

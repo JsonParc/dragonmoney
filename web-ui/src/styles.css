@@ -144,3 +144,7 @@ p { margin: 0 0 10px; }
   .seat.moved { animation: settle 0.5s ease-out; }
   @keyframes settle { from { transform: translateX(-10px); } to { transform: none; opacity: 1; } }
 }
+
+.static-banner { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 0.875rem;
+  background: var(--news-soft); color: var(--ink); display: grid; gap: 8px; }
+.static-banner .btn { justify-self: start; min-height: 36px; padding: 6px 12px; }

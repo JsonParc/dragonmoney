@@ -1,3 +1,5 @@
+import { siteMode, staticCall } from "./site";
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -5,6 +7,14 @@ export class ApiError extends Error {
 }
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (siteMode() === "static") {
+    try {
+      return staticCall(method, path) as T;
+    } catch (e) {
+      const err = e as Error & { status?: number };
+      throw new ApiError(err.status ?? 400, err.message);
+    }
+  }
   const res = await fetch(`/api${path}`, {
     method,
     credentials: "same-origin",
