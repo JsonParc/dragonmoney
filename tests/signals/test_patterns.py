@@ -58,5 +58,10 @@ def test_long_bull_candle():
     assert "long_bull_candle" in names(compute_indicators(make_df(closes)))
 
 
+def test_flat_series_rsi_is_neutral():
+    df = compute_indicators(make_df([100] * 40))
+    assert df["rsi14"].iloc[-1] == pytest.approx(50) and names(df) == set()
+
+
 def test_short_history_does_not_crash():
     assert isinstance(detect_patterns(compute_indicators(make_df([100, 101, 102]))), list)
