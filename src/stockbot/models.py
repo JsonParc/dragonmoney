@@ -90,3 +90,28 @@ class LLMSpend(Base):
     model: Mapped[str] = mapped_column(String)
     cost_usd: Mapped[float] = mapped_column(Float)
     at: Mapped[_dt] = mapped_column(DateTime)
+
+
+class DebateRow(Base):
+    __tablename__ = "debates"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String, index=True)
+    as_of: Mapped[_date] = mapped_column(Date, index=True)
+    kind: Mapped[str] = mapped_column(String)
+    direction: Mapped[str | None] = mapped_column(String, nullable=True)
+    deadlock: Mapped[bool] = mapped_column(Boolean)
+    persuading_team: Mapped[str | None] = mapped_column(String, nullable=True)
+    referee_summary: Mapped[str] = mapped_column(Text, default="")
+    result_json: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[_dt] = mapped_column(DateTime)
+
+
+class OpinionRow(Base):
+    __tablename__ = "opinions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    debate_id: Mapped[int] = mapped_column(Integer, index=True)
+    seat_id: Mapped[str] = mapped_column(String)
+    team: Mapped[str] = mapped_column(String)
+    round: Mapped[int] = mapped_column(Integer)
+    valid: Mapped[bool] = mapped_column(Boolean)
+    body_json: Mapped[dict] = mapped_column(JSON)
