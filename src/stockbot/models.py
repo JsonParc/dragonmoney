@@ -53,3 +53,17 @@ class NewsRow(Base):
     sentiment: Mapped[float] = mapped_column(Float, default=0.0)
     severity: Mapped[int] = mapped_column(Integer, default=0)
     cluster_id: Mapped[int | None] = mapped_column(Integer, index=True, nullable=True)
+
+
+class NewsClusterRow(Base):
+    __tablename__ = "news_clusters"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    first_seen: Mapped[_dt] = mapped_column(DateTime)
+    last_seen: Mapped[_dt] = mapped_column(DateTime, index=True)
+    headline: Mapped[str] = mapped_column(Text)
+    tickers: Mapped[list] = mapped_column(JSON, default=list)
+    tags: Mapped[list] = mapped_column(JSON, default=list)
+    verification: Mapped[str] = mapped_column(String)
+    independent_sources: Mapped[int] = mapped_column(Integer)
+    best_tier: Mapped[int] = mapped_column(Integer)
+    severity: Mapped[int] = mapped_column(Integer, default=0)
