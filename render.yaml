@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: dragonmoney
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: STOCKBOT_WEB_PASSWORD
+        sync: false
+      - key: STOCKBOT_PIN
+        sync: false
+      - key: STOCKBOT_SECRET_KEY
+        generateValue: true
+      - key: STOCKBOT_TELEGRAM_TOKEN
+        sync: false
+      - key: STOCKBOT_TELEGRAM_CHAT_IDS
+        sync: false
+      - key: STOCKBOT_FINNHUB_KEY
+        sync: false
+      - key: STOCKBOT_GEMINI_KEY
+        sync: false
+      - key: STOCKBOT_GROQ_KEY
+        sync: false
