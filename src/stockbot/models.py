@@ -67,3 +67,26 @@ class NewsClusterRow(Base):
     independent_sources: Mapped[int] = mapped_column(Integer)
     best_tier: Mapped[int] = mapped_column(Integer)
     severity: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class LLMCall(Base):
+    __tablename__ = "llm_calls"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    cache_key: Mapped[str] = mapped_column(String, unique=True)
+    provider: Mapped[str] = mapped_column(String)
+    model: Mapped[str] = mapped_column(String)
+    input_tokens: Mapped[int] = mapped_column(Integer)
+    output_tokens: Mapped[int] = mapped_column(Integer)
+    cost_usd: Mapped[float] = mapped_column(Float)
+    response_text: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[_dt] = mapped_column(DateTime)
+
+
+class LLMSpend(Base):
+    __tablename__ = "llm_spend"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    month: Mapped[str] = mapped_column(String, index=True)
+    provider: Mapped[str] = mapped_column(String)
+    model: Mapped[str] = mapped_column(String)
+    cost_usd: Mapped[float] = mapped_column(Float)
+    at: Mapped[_dt] = mapped_column(DateTime)

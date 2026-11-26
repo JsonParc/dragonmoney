@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     groq_key: str | None = None
     openai_key: str | None = None
     anthropic_key: str | None = None
+    # optional model id overrides (see llm/pricing.py DEFAULT_MODELS)
+    gemini_model: str | None = None
+    gemini_lite_model: str | None = None
+    groq_model: str | None = None
+    groq_alt_model: str | None = None
+    groq_vision_model: str | None = None
+    openai_model: str | None = None
+    anthropic_model: str | None = None
 
 
 @lru_cache
