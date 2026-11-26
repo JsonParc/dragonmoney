@@ -115,3 +115,37 @@ class OpinionRow(Base):
     round: Mapped[int] = mapped_column(Integer)
     valid: Mapped[bool] = mapped_column(Boolean)
     body_json: Mapped[dict] = mapped_column(JSON)
+
+
+class DecisionRow(Base):
+    __tablename__ = "decisions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    debate_id: Mapped[int] = mapped_column(Integer, index=True)
+    ticker: Mapped[str] = mapped_column(String)
+    as_of: Mapped[_date] = mapped_column(Date)
+    direction: Mapped[str] = mapped_column(String)
+    ref_price: Mapped[float] = mapped_column(Float)
+    graded: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    outcome: Mapped[str | None] = mapped_column(String, nullable=True)
+    ret: Mapped[float | None] = mapped_column(Float, nullable=True)
+    persuading_team: Mapped[str | None] = mapped_column(String, nullable=True)
+    seat_directions: Mapped[dict] = mapped_column(JSON, default=dict)
+    seat_teams: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+class SeatScore(Base):
+    __tablename__ = "seat_scores"
+    seat_id: Mapped[str] = mapped_column(String, primary_key=True)
+    ema: Mapped[float] = mapped_column(Float, default=0.0)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
+    n: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class ScoreEvent(Base):
+    __tablename__ = "score_events"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    seat_id: Mapped[str] = mapped_column(String, index=True)
+    debate_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    delta: Mapped[float] = mapped_column(Float)
+    reason: Mapped[str] = mapped_column(String)
+    created_at: Mapped[_dt] = mapped_column(DateTime)
