@@ -34,3 +34,22 @@ class PriceCoverage(Base):
     ticker: Mapped[str] = mapped_column(String, primary_key=True)
     start: Mapped[_date] = mapped_column(Date)
     end: Mapped[_date] = mapped_column(Date)
+
+
+class NewsRow(Base):
+    __tablename__ = "news_items"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    url: Mapped[str] = mapped_column(String, unique=True)
+    title: Mapped[str] = mapped_column(Text)
+    title_norm: Mapped[str] = mapped_column(Text, index=True)
+    summary: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str | None] = mapped_column(String)
+    domain: Mapped[str | None] = mapped_column(String, index=True)
+    wire: Mapped[str | None] = mapped_column(String)
+    published_at: Mapped[_dt] = mapped_column(DateTime, index=True)
+    fetched_at: Mapped[_dt] = mapped_column(DateTime)
+    tickers: Mapped[list] = mapped_column(JSON, default=list)
+    tags: Mapped[list] = mapped_column(JSON, default=list)
+    sentiment: Mapped[float] = mapped_column(Float, default=0.0)
+    severity: Mapped[int] = mapped_column(Integer, default=0)
+    cluster_id: Mapped[int | None] = mapped_column(Integer, index=True, nullable=True)

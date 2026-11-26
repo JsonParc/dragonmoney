@@ -9,6 +9,8 @@ contourpy==1.4.0
 curl_cffi==0.17.0
 cycler==0.12.1
 exchange_calendars==4.13.3
+feedparser==6.0.14
+feedparser-sgmllib==2.1.0
 fonttools==4.69.1
 h11==0.16.0
 httpcore==1.0.9

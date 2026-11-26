@@ -1,0 +1,105 @@
+# News feeds and source trust tiers.
+# tier 0 = primary source (filings, central bank, government stats, company IR)
+# tier 1 = major wires / financial press, tier 2 = general outlets, tier 3 = unknown/blog/community
+
+[[feeds]]
+name = "CNBC Top News"
+url = "https://www.cnbc.com/id/100003114/device/rss/rss.html"
+tier = 1
+
+[[feeds]]
+name = "CNBC Markets"
+url = "https://www.cnbc.com/id/20910258/device/rss/rss.html"
+tier = 1
+
+[[feeds]]
+name = "MarketWatch Top Stories"
+url = "https://feeds.content.dowjones.io/public/rss/mw_topstories"
+tier = 1
+
+[[feeds]]
+name = "MarketWatch Market Pulse"
+url = "https://feeds.content.dowjones.io/public/rss/mw_marketpulse"
+tier = 1
+
+[[feeds]]
+name = "Yahoo Finance"
+url = "https://finance.yahoo.com/news/rssindex"
+tier = 2
+
+[[feeds]]
+name = "Nasdaq Markets"
+url = "https://www.nasdaq.com/feed/rssoutbound?category=Markets"
+tier = 2
+
+[[feeds]]
+name = "Investing.com News"
+url = "https://www.investing.com/rss/news.rss"
+tier = 2
+
+[[feeds]]
+name = "BBC Business"
+url = "https://feeds.bbci.co.uk/news/business/rss.xml"
+tier = 1
+
+[[feeds]]
+name = "BBC World"
+url = "https://feeds.bbci.co.uk/news/world/rss.xml"
+tier = 1
+
+[[feeds]]
+name = "NYT Business"
+url = "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml"
+tier = 1
+
+[[feeds]]
+name = "Guardian Business"
+url = "https://www.theguardian.com/uk/business/rss"
+tier = 1
+
+[[feeds]]
+name = "Federal Reserve Press"
+url = "https://www.federalreserve.gov/feeds/press_all.xml"
+tier = 0
+
+[[feeds]]
+name = "BLS Latest"
+url = "https://www.bls.gov/feed/bls_latest.rss"
+tier = 0
+
+[tiers]
+"sec.gov" = 0
+"federalreserve.gov" = 0
+"bls.gov" = 0
+"bea.gov" = 0
+"treasury.gov" = 0
+"reuters.com" = 1
+"apnews.com" = 1
+"bloomberg.com" = 1
+"wsj.com" = 1
+"ft.com" = 1
+"cnbc.com" = 1
+"marketwatch.com" = 1
+"barrons.com" = 1
+"nytimes.com" = 1
+"bbc.co.uk" = 1
+"bbc.com" = 1
+"theguardian.com" = 1
+"economist.com" = 1
+"axios.com" = 2
+"finance.yahoo.com" = 2
+"yahoo.com" = 2
+"nasdaq.com" = 2
+"investing.com" = 2
+"fool.com" = 2
+"seekingalpha.com" = 2
+"businessinsider.com" = 2
+"cnn.com" = 2
+"foxbusiness.com" = 2
+"forbes.com" = 2
+"thestreet.com" = 2
+"benzinga.com" = 2
+"zacks.com" = 2
+"reddit.com" = 3
+"x.com" = 3
+"twitter.com" = 3
