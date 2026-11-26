@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     from stockbot.pipeline.daily import DailyCycle
     from stockbot.pipeline.news_watch import NewsWatcher
     from stockbot.scheduler import start_scheduler
-    from stockbot.telegram.bot import KVOffsetStore, TelegramPoller
+    from stockbot.telegram.bot import KVOffsetStore, TelegramPoller, register_commands
     from stockbot.telegram.commands import CommandService
 
     settings = Settings()
@@ -72,6 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         poller = TelegramPoller(settings.telegram_token, CommandService(deps, settings),
                                 offset_store=KVOffsetStore(deps.session_factory))
         poller.start()
+        register_commands(settings.telegram_token)
         deps.notifier.send("🤖 주식 봇이 시작됐습니다. /help 로 명령어를 볼 수 있어요.")
     try:
         uvicorn.run(create_app(deps, settings, static_dir=STATIC), host=a.host, port=a.port)

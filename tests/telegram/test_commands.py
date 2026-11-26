@@ -157,3 +157,26 @@ def test_status_shows_product_rules(svc, deps):
     assert "개별 주식만" in svc.handle_text(111, "/status", T).text
     cfg = deps.runtime(); cfg.rules_paper.allow_leveraged_etf = True; deps.save_runtime(cfg)
     assert "레버리지·인버스" in svc.handle_text(111, "/status", T).text
+
+
+def test_id_command_works_for_any_chat(svc):
+    assert svc.handle_text(555, "/id", T).text.endswith("555")
+    assert svc.handle_text(555, "/status", T) is None
+
+
+def test_register_commands_sets_bot_menu():
+    import json as _json
+    from stockbot.telegram.bot import register_commands
+    from stockbot.telegram.commands import BOT_COMMANDS
+    sent = []
+
+    def handler(req):
+        sent.append((req.url.path, _json.loads(req.content)))
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    assert register_commands("TOKEN", client=httpx.Client(transport=httpx.MockTransport(handler)))
+    path, payload = sent[0]
+    names = [c["command"] for c in payload["commands"]]
+    assert path == "/botTOKEN/setMyCommands" and payload["scope"] == {"type": "all_private_chats"}
+    assert {"status", "pending", "auto", "stop", "id"} <= set(names) and len(names) == len(BOT_COMMANDS)
+    assert all(c["command"].islower() and len(c["command"]) <= 32 for c in payload["commands"])

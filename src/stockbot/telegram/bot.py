@@ -42,6 +42,21 @@ class TelegramNotifier:
             self.send_to(cid, text, buttons)
 
 
+def register_commands(token: str, client: httpx.Client | None = None) -> bool:
+    """Publish the command menu for private chats only, so a shared bot's channel use is unaffected."""
+    from stockbot.telegram.commands import BOT_COMMANDS
+
+    http = client or httpx.Client(timeout=20)
+    payload = {"commands": [{"command": c, "description": d} for c, d in BOT_COMMANDS],
+               "scope": {"type": "all_private_chats"}}
+    try:
+        r = http.post(API.format(token=token, method="setMyCommands"), json=payload)
+        return bool(r.json().get("ok"))
+    except (httpx.HTTPError, ValueError):
+        log.warning("telegram setMyCommands failed")
+        return False
+
+
 class KVOffsetStore:
     def __init__(self, session_factory):
         self._sf = session_factory

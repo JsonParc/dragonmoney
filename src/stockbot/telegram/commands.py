@@ -23,6 +23,25 @@ HELP = """명령어
 /cost 이번 달 AI 비용  /ask 질문 (또는 그냥 질문을 보내세요)"""
 
 
+BOT_COMMANDS: list[tuple[str, str]] = [
+    ("status", "봇 상태와 자산"),
+    ("report", "오늘 투자 설명회 보고서"),
+    ("positions", "보유 종목"),
+    ("pending", "승인 대기 주문"),
+    ("auto", "자동 모드 on/off (on은 PIN)"),
+    ("pause", "신규 매수 일시정지"),
+    ("stop", "긴급 정지"),
+    ("resume", "재개 (PIN)"),
+    ("budget", "투입금 한도 변경 (PIN)"),
+    ("mode", "모의/실전 전환 (PIN)"),
+    ("liquidate", "전량 매도 (PIN)"),
+    ("cost", "이번 달 AI 비용"),
+    ("ask", "봇에게 질문"),
+    ("id", "이 채팅의 ID 확인"),
+    ("help", "명령어 목록"),
+]
+
+
 @dataclass
 class Reply:
     text: str
@@ -174,9 +193,11 @@ class CommandService:
 
     # ------------------------------------------------------------- text
     def handle_text(self, chat_id: int, text: str, now: datetime) -> Reply | None:
+        text = (text or "").strip()
+        if text.split("@")[0].lower() == "/id":  # lets the owner find the chat id to put in STOCKBOT_TELEGRAM_CHAT_IDS
+            return Reply(f"이 채팅의 ID: {chat_id}")
         if not self._allowed(chat_id):
             return None
-        text = (text or "").strip()
         wait = self._pin_wait.pop(chat_id, None)
         if wait and now - wait[2] <= PIN_TTL and not text.startswith("/"):
             res = pin_guard(self.d).check(self.settings, text, now)
