@@ -1,6 +1,6 @@
 .superpowers/
 .env
-data/
+/data/
 .venv/
 __pycache__/
 *.pyc
@@ -9,3 +9,4 @@ web-ui/node_modules/
 web-ui/dist/
 scratch/
 *.egg-info/
+web-ui/tsconfig.tsbuildinfo
