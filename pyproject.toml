@@ -14,6 +14,7 @@ dependencies = [
     "exchange_calendars>=4.5",
     "tzdata",
     "pandas>=2.2",
+    "yfinance>=0.2.40",
 ]
 
 [project.optional-dependencies]
@@ -30,7 +31,7 @@ markers = [
     "network: needs internet access (deselected by default)",
     "slow: slow tests (deselected by default)",
 ]
-addopts = "-m 'not network and not slow'"
+addopts = "-m 'not network and not slow' --import-mode=importlib"
 filterwarnings = [
     "ignore:.*returning an ndarray that drops timezone.*",
 ]
