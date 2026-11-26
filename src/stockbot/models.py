@@ -149,3 +149,49 @@ class ScoreEvent(Base):
     delta: Mapped[float] = mapped_column(Float)
     reason: Mapped[str] = mapped_column(String)
     created_at: Mapped[_dt] = mapped_column(DateTime)
+
+
+class OrderRow(Base):
+    __tablename__ = "orders"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    idempotency_key: Mapped[str] = mapped_column(String, unique=True)
+    ticker: Mapped[str] = mapped_column(String, index=True)
+    side: Mapped[str] = mapped_column(String)
+    qty: Mapped[int] = mapped_column(Integer)
+    kind: Mapped[str] = mapped_column(String)
+    limit_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    expires_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String, index=True)
+    fill_price: Mapped[float | None] = mapped_column(Float, nullable=True)
+    fill_qty: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    commission: Mapped[float | None] = mapped_column(Float, nullable=True)
+    decision_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    needs_approval: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[_dt] = mapped_column(DateTime)
+    filled_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)
+    broker: Mapped[str] = mapped_column(String, default="")
+
+
+class PaperPosition(Base):
+    __tablename__ = "paper_positions"
+    ticker: Mapped[str] = mapped_column(String, primary_key=True)
+    qty: Mapped[int] = mapped_column(Integer)
+    avg_price: Mapped[float] = mapped_column(Float)
+
+
+class PaperCash(Base):
+    __tablename__ = "paper_cash"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cash: Mapped[float] = mapped_column(Float)
+    peak_equity: Mapped[float] = mapped_column(Float)
+
+
+class ApprovalRowDB(Base):
+    __tablename__ = "approvals"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    order_id: Mapped[int] = mapped_column(Integer, index=True)
+    status: Mapped[str] = mapped_column(String)
+    expires_at: Mapped[_dt] = mapped_column(DateTime)
+    decided_at: Mapped[_dt | None] = mapped_column(DateTime, nullable=True)

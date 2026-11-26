@@ -32,7 +32,7 @@ packages = ["src/stockbot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "tests", "tests/signals", "tests/llm", "tests/debate", "tests/scoring", "tests/risk"]
+pythonpath = ["src", "tests", "tests/signals", "tests/llm", "tests/debate", "tests/scoring", "tests/risk", "tests/execution"]
 markers = [
     "network: needs internet access (deselected by default)",
     "slow: slow tests (deselected by default)",
