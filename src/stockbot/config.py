@@ -46,6 +46,13 @@ class RiskConfig(BaseModel):
     max_holdings: int = 8
     stop_loss_pct: float = -0.15
     circuit_breaker_dd: float = -0.20
+    max_orders_per_day: int = 10
+    max_daily_notional_pct: float = 0.30
+    churn_round_trips: int = 3
+    churn_window_days: int = 5
+    max_consecutive_losses: int = 5
+    quote_stale_minutes: int = 15
+    quote_jump_pct: float = 0.25
 
 
 class DebateConfig(BaseModel):
