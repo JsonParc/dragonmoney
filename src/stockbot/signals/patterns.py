@@ -50,6 +50,18 @@ def detect_patterns(ind: pd.DataFrame) -> list[ChartSignal]:
             out.append(ChartSignal(name=f"dead_cross_{label}", direction="bear", strength=1.0,
                                    text=f"{fast[2:]}일선이 {slow[2:]}일선을 하향 이탈 (데드크로스)"))
 
+    x = _cross(ind, "macd", "macd_signal") if {"macd", "macd_signal"} <= set(ind.columns) else 0
+    if x == 1:
+        out.append(ChartSignal(name="macd_golden_cross", direction="bull", strength=1.0, text="MACD가 시그널선 상향 돌파"))
+    elif x == -1:
+        out.append(ChartSignal(name="macd_dead_cross", direction="bear", strength=1.0, text="MACD가 시그널선 하향 이탈"))
+    bu, bl = last.get("bb_upper"), last.get("bb_lower")
+    if _ok(bu, bl) and bu > bl:
+        if c > bu:
+            out.append(ChartSignal(name="bb_upper_break", direction="bull", strength=1.0, text="볼린저밴드 상단 돌파 (강한 상승 탄력)"))
+        elif c < bl:
+            out.append(ChartSignal(name="bb_lower_break", direction="bear", strength=1.0, text="볼린저밴드 하단 이탈 (하락 탄력)"))
+
     m5, m20, m60, m120 = (last.get(k) for k in ("ma5", "ma20", "ma60", "ma120"))
     aligned_bull = _ok(m5, m20, m60, m120) and m5 > m20 > m60 > m120
     if aligned_bull:

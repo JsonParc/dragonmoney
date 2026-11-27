@@ -16,15 +16,17 @@ from stockbot.llm.pricing import DEFAULT_MODELS, FREE_PROVIDERS, VISION_PROVIDER
 
 T = TypeVar("T", bound=BaseModel)
 
-SEAT_IDS = ["chart_trend", "chart_volume", "chart_candle", "news_news", "news_case", "news_macro",
-            "referee", "reporter"]
+SEAT_IDS = ["chart_trend", "chart_volume", "chart_candle", "chart_indicator", "news_news", "news_case", "news_macro",
+            "news_fundamental", "referee", "reporter"]
 
 # Free-first chains per seat; providers within a team are mixed (spec §7.5). Paid providers go last.
 DEFAULT_CHAINS: dict[str, list[str]] = {
     "chart_trend": ["gemini", "groq_vision", "groq"],
     "chart_volume": ["groq", "gemini_lite", "groq_alt"],
     "chart_candle": ["groq_vision", "gemini", "groq"],
+    "chart_indicator": ["gemini_lite", "groq", "groq_alt"],
     "news_news": ["groq", "gemini_lite", "groq_alt"],
+    "news_fundamental": ["gemini", "groq", "gemini_lite"],
     "news_case": ["gemini", "groq_alt", "groq"],
     "news_macro": ["groq_alt", "gemini_lite", "groq"],
     "referee": ["gemini", "groq", "gemini_lite"],

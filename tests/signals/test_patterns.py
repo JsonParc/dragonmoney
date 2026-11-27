@@ -65,3 +65,10 @@ def test_flat_series_rsi_is_neutral():
 
 def test_short_history_does_not_crash():
     assert isinstance(detect_patterns(compute_indicators(make_df([100, 101, 102]))), list)
+
+
+def test_macd_cross_and_bollinger_break():
+    up = compute_indicators(make_df([100] * 60 + [100 - i * 0.5 for i in range(20)] + [95, 99, 104]))
+    assert {"macd_golden_cross", "bb_upper_break"} & names(up)
+    down = compute_indicators(make_df([100 + (i % 2) * 0.2 for i in range(60)] + [90]))
+    assert "bb_lower_break" in names(down)

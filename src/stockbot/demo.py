@@ -65,17 +65,20 @@ def build_demo():
     r0 = [_op("chart_trend", C, 0, "ADD", 0.7, "20일선 위 정배열 유지, 추세 살아있음"),
           _op("chart_volume", C, 0, "HOLD", 0.55, "거래량 평범, 세력 이탈 신호 없음"),
           _op("chart_candle", C, 0, "ADD", 0.6, "눌림목 후 아랫꼬리 양봉"),
+          _op("chart_indicator", C, 0, "HOLD", 0.5, "MACD 시그널선 근처, 볼린저 중단 지지"),
           _op("news_news", N, 0, "SELL_REBUY", 0.7, "[확인됨·출처 5곳] 중동 전쟁 확산, 유가 급등"),
           _op("news_case", N, 0, "SELL_REBUY", 0.75, "과거 유사 사례 7건: 기술주 D+5 평균 -6%, 바닥 4일"),
-          _op("news_macro", N, 0, "SELL", 0.65, "10년물 금리와 유가 동반 상승은 기술주에 부담")]
+          _op("news_macro", N, 0, "SELL", 0.65, "10년물 금리와 유가 동반 상승은 기술주에 부담"),
+          _op("news_fundamental", N, 0, "HOLD", 0.55, "PER 높지만 매출 성장 +60%, 순현금이라 악재 버틸 체력 충분")]
     r1 = [_op("chart_trend", C, 1, "ADD", 0.6, "추세는 여전히 위"),
           _op("chart_volume", C, 1, "SELL_REBUY", 0.6, "뉴스팀 사례 통계 설득력 있음, 일단 빼고 되사자"),
           _op("chart_candle", C, 1, "HOLD", 0.5, "패턴상 결정적 이탈은 없음"),
-          *[o.model_copy(update={"round": 1}) for o in r0[3:]]]
+          *[o.model_copy(update={"round": 1}) for o in r0[3:] if o.seat_id != "news_fundamental"],
+          _op("news_fundamental", N, 1, "SELL_REBUY", 0.6, "체력은 충분하지만 유가 충격 기간엔 고PER 부담, 되사기 동의")]
     res = DebateResult(ticker="NVDA", as_of=today, kind="emergency", rounds=[r0, r1], direction=Direction.SELL_SIDE,
-                       shares={Direction.BUY_SIDE: 1 / 6, Direction.HOLD: 1 / 6, Direction.SELL_SIDE: 4 / 6},
+                       shares={Direction.BUY_SIDE: 1 / 8, Direction.HOLD: 2 / 8, Direction.SELL_SIDE: 5 / 8},
                        resolved=ResolvedAction(action=Action.SELL_REBUY, rebuy_price=109.5), deadlock=False,
-                       persuasion=PersuasionRecord(persuading_team=N, switched_seats=["chart_volume"]), invalid_seats=[],
+                       persuasion=PersuasionRecord(persuading_team=N, switched_seats=["chart_volume", "news_fundamental"]), invalid_seats=[],
                        referee_summary="뉴스팀은 전쟁 확산과 과거 사례(평균 -6%)를 근거로 지금 팔고 $109.5에 되사자고 했고, "
                                        "차트팀 거래량 담당이 설득됐습니다. 추세가 살아 있다는 반론은 남아 있습니다.",
                        held=True)

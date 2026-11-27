@@ -76,9 +76,23 @@ def test_save_result(session_factory):
         did = save_result(s, res)
         s.commit()
         assert s.get(DebateRow, did).direction == "buy_side"
-        assert s.query(OpinionRow).filter_by(debate_id=did).count() == 6
+        assert s.query(OpinionRow).filter_by(debate_id=did).count() == 8
 
 
 def test_leveraged_product_warning_in_prompt():
     req = seat_prompt(SEATS["chart_trend"], ctx(ticker="TQQQ", product_note="3배 레버리지 ETF"), 0, [])
     assert "3배 레버리지 ETF" in req.user and "감쇠" in req.user
+
+
+def test_teams_are_balanced_with_fundamental_and_indicator_seats():
+    from stockbot.debate.seats import DEFAULT_SEATS
+    ids = {s.seat_id for s in DEFAULT_SEATS}
+    assert {"news_fundamental", "chart_indicator"} <= ids
+    assert sum(s.team == "chart" for s in DEFAULT_SEATS) == sum(s.team == "news" for s in DEFAULT_SEATS) == 4
+
+
+def test_fundamentals_only_shown_to_fundamental_seat():
+    c = ctx(fundamentals_digest=["PER 28.4배"])
+    assert "PER 28.4배" in seat_prompt(SEATS["news_fundamental"], c, 0, []).user
+    assert "PER 28.4배" not in seat_prompt(SEATS["news_news"], c, 0, []).user
+    assert "PER 28.4배" not in seat_prompt(SEATS["chart_trend"], c, 0, []).user

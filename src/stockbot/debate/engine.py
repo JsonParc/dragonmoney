@@ -42,6 +42,7 @@ class DebateContext(BaseModel):
     scoreboard_text: str = ""
     anonymize: bool = False
     product_note: str | None = None
+    fundamentals_digest: list[str] = []
 
 
 class DebateResult(BaseModel):

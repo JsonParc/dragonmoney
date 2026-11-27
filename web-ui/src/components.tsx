@@ -3,8 +3,8 @@ import { NavLink } from "react-router-dom";
 import type { Mode, Opinion } from "./api";
 
 export const SEAT_KO: Record<string, string> = {
-  chart_trend: "추세", chart_volume: "세력", chart_candle: "캔들",
-  news_news: "뉴스", news_case: "사례", news_macro: "거시",
+  chart_trend: "추세", chart_volume: "세력", chart_candle: "캔들", chart_indicator: "지표",
+  news_news: "뉴스", news_case: "사례", news_macro: "거시", news_fundamental: "재무",
 };
 export const ACTION_KO: Record<string, string> = {
   BUY: "신규 매수", ADD: "추가 매수", HOLD: "보유 유지", TRIM: "일부 매도", SELL: "매도",

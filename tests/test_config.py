@@ -18,7 +18,7 @@ def test_runtime_defaults():
     assert c.risk.min_adv_usd == 50_000_000 and c.risk.max_adv_fraction == 0.01
     assert c.risk.max_position_pct == 0.20 and c.risk.max_holdings == 8
     assert c.risk.stop_loss_pct == -0.15 and c.risk.circuit_breaker_dd == -0.20
-    assert c.debate.seats_per_team == 3 and c.debate.max_rebuttal_rounds == 2
+    assert c.debate.seats_per_team == 4 and c.debate.max_rebuttal_rounds == 2
     assert c.cost.monthly_cap_usd == 10.0 and c.mode.broker == "paper" and c.mode.automation == "semi"
 
 

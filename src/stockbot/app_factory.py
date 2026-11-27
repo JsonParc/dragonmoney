@@ -8,6 +8,7 @@ from stockbot.pipeline.deps import Deps
 
 def build_deps(settings: Settings, runtime_cfg: RuntimeConfig | None = None, session_factory=None) -> Deps:
     from stockbot.broker.paper import PaperBroker
+    from stockbot.data.fundamentals import FinnhubFundamentals, FundamentalsStore, YFinanceFundamentals
     from stockbot.data.news import FinnhubSource, GoogleNewsSource, NewsStore, RssSource, SecEdgarSource, load_feeds
     from stockbot.data.prices import PriceStore, YFinanceFetcher
     from stockbot.data.quotes import finnhub_quote_fn, yfinance_quote_fn
@@ -52,4 +53,6 @@ def build_deps(settings: Settings, runtime_cfg: RuntimeConfig | None = None, ses
         executor=Executor(session_factory, broker, approvals, notifier), approvals=approvals, notifier=notifier,
         health=Health(session_factory), budget=BudgetTracker(session_factory, runtime_cfg.cost),
         universe=[e.ticker for e in load_universe()], chart_dir=settings.data_dir / "charts", router=router,
+        fundamentals=FundamentalsStore(session_factory, ([FinnhubFundamentals(settings.finnhub_key)]
+                                                         if settings.finnhub_key else []) + [YFinanceFundamentals()]),
     )

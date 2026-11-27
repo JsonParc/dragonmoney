@@ -224,3 +224,10 @@ class EquitySnapshot(Base):
     equity: Mapped[float] = mapped_column(Float)
     cash: Mapped[float] = mapped_column(Float)
     spy_close: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+
+class FundamentalsCache(Base):
+    __tablename__ = "fundamentals_cache"
+    ticker: Mapped[str] = mapped_column(String, primary_key=True)
+    fetched_at: Mapped[_dt] = mapped_column(DateTime)
+    data: Mapped[str] = mapped_column(Text, default="")

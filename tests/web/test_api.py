@@ -99,7 +99,7 @@ def test_settings_hide_secrets(authed):
 
 
 def test_scoreboard_news_health(authed):
-    assert len(authed.get("/api/scoreboard").json()["seats"]) == 6
+    assert len(authed.get("/api/scoreboard").json()["seats"]) == 8
     assert isinstance(authed.get("/api/news").json(), list)
     assert "prices" in authed.get("/api/health").json()
 

@@ -29,6 +29,7 @@ class Deps:
     chart_dir: Path = Path("data/charts")
     render_charts: bool = True
     router: Any = None     # LLMRouter (reports / Q&A)
+    fundamentals: Any = None  # FundamentalsStore
 
     def runtime(self) -> RuntimeConfig:
         with self.session_factory() as s:

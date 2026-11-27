@@ -70,6 +70,20 @@ def macro_digest(deps, as_of: date) -> list[str]:
     return lines
 
 
+def _fundamentals(deps, ticker: str, etf) -> list[str]:
+    from stockbot.data.fundamentals import digest
+
+    if etf is not None:
+        return ["ETF라 재무제표가 없음 — 구성 종목·섹터·운용 방식(레버리지 등)으로 판단할 것"]
+    store = getattr(deps, "fundamentals", None)
+    if store is None:
+        return ["재무 데이터 소스 미설정"]
+    try:
+        return digest(store.get(ticker))
+    except Exception:
+        return ["재무 데이터 조회 실패"]
+
+
 def build_context(deps, ticker: str, as_of: date, kind: str, holding: PositionView | None,
                   news_as_of: datetime | None = None) -> DebateContext:
     sector = sector_of(ticker)
@@ -104,7 +118,8 @@ def build_context(deps, ticker: str, as_of: date, kind: str, holding: PositionVi
     return DebateContext(ticker=ticker, sector=sector, as_of=as_of, kind=kind, holding=holding, last_price=price,
                          chart_signals=[s.text for s in sigs], indicator_summary=summary, chart_png=png,
                          news_digest=news_lines, macro_digest=macro_digest(deps, as_of),
-                         scoreboard_text=deps.scoreboard.summary_text(), product_note=note)
+                         scoreboard_text=deps.scoreboard.summary_text(), product_note=note,
+                         fundamentals_digest=_fundamentals(deps, ticker, etf))
 
 
 def utc(ts: datetime) -> datetime:

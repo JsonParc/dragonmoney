@@ -62,6 +62,9 @@ def seat_prompt(seat: Seat, ctx: "DebateContext", round: int, prior: list[Opinio
         lines += [f"- {n}" for n in ctx.news_digest] or ["- 관련 뉴스 없음"]
         lines.append("[거시]")
         lines += [f"- {m}" for m in ctx.macro_digest] or ["- 데이터 없음"]
+        if seat.seat_id == "news_fundamental":
+            lines.append("[재무제표 지표]")
+            lines += [f"- {x}" for x in ctx.fundamentals_digest] or ["- 재무 데이터 없음"]
         if seat.seat_id == "news_case" or ctx.case_digest:
             lines.append("[과거 유사 사례]")
             lines.append(ctx.case_digest or "- 사례집 미구축 (일반적 패턴으로 추정할 것)")
